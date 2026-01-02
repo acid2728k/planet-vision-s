@@ -6,129 +6,129 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 
-**Веб-приложение для распознавания жестов рук в реальном времени с использованием MediaPipe Hands**
+**Real-time hand gesture recognition web application using MediaPipe Hands**
 
-[🚀 Быстрый старт](#-быстрый-старт) • [📋 Возможности](#-возможности) • [🛠 Технологии](#-технологии)
+[🚀 Quick Start](#-quick-start) • [📋 Features](#-features) • [🛠 Technologies](#-technologies)
 
 </div>
 
 ---
 
-Веб-приложение для распознавания жестов рук в реальном времени с использованием MediaPipe Hands, стилизованное под терминальный интерфейс VISION_OS.
+Real-time hand gesture recognition web application using MediaPipe Hands, styled as a VISION_OS terminal interface.
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### Требования
+### Requirements
 
-- Node.js 18+ (проверьте: `node --version`)
-- npm или yarn
-- Веб-камера
-- Современный браузер (Chrome, Firefox, Safari)
+- Node.js 18+ (check: `node --version`)
+- npm or yarn
+- Web camera
+- Modern browser (Chrome, Firefox, Safari)
 
-### Установка и запуск
+### Installation and Setup
 
-1. **Перейдите в директорию проекта:**
+1. **Navigate to the project directory:**
 
    ```bash
    cd vision-os-gesture-app-new/frontend
    ```
 
-2. **Установите зависимости:**
+2. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-3. **Запустите dev-сервер:**
+3. **Start the dev server:**
 
    ```bash
    npm run dev
    ```
 
-4. **Откройте браузер:**
-   - Приложение будет доступно по адресу: `http://localhost:5173`
-   - При первом запуске браузер запросит разрешение на использование камеры - разрешите доступ
+4. **Open your browser:**
+   - The application will be available at: `http://localhost:5173`
+   - On first launch, the browser will request camera permission - allow access
 
-## 📋 Возможности
+## 📋 Features
 
-- **Распознавание жестов в реальном времени** через MediaPipe Hands
-- **Визуализация скелета руки** с оверлеем на видео
-- **Анализ расширения пальцев** (5 индикаторов)
-- **Компас ориентации** ладони
-- **График силы щипка** с историей
-- **Нейронная карта** активности (5x5 сетка)
-- **Определение жестов**: OPEN, CLOSED, PINCH, THUMBS_UP, THUMBS_DOWN, POINT, VICTORY
+- **Real-time gesture recognition** via MediaPipe Hands
+- **Hand skeleton visualization** with overlay on video
+- **Finger extension analysis** (5 indicators)
+- **Orientation compass** for palm
+- **Pinch strength graph** with history
+- **Neural activity map** (15x15 pixel grid)
+- **Gesture detection**: OPEN, CLOSED, PINCH, THUMBS_UP, THUMBS_DOWN, POINT, VICTORY
 
-## 🎨 Интерфейс
+## 🎨 Interface
 
-Интерфейс выполнен в темной теме с фиолетовыми акцентами, имитируя терминальный стиль VISION_OS:
+The interface features a dark theme with purple accents, mimicking the VISION_OS terminal style:
 
-- Черный фон (#000000)
-- Фиолетовые акценты (#bb00ff, #aa66cc)
-- Моноширинный шрифт (JetBrains Mono)
-- Эффекты свечения и пульсации
+- Black background (#000000)
+- Purple accents (#bb00ff, #aa66cc)
+- Monospace font (JetBrains Mono)
+- Glow and pulse effects
 
-## 🛠 Технологии
+## 🛠 Technologies
 
 - **React 19** + **TypeScript**
-- **Vite** - сборщик и dev-сервер
-- **@mediapipe/hands** - распознавание жестов
-- **@mediapipe/camera_utils** - работа с камерой
-- **Canvas API** - отрисовка скелета руки
+- **Vite** - build tool and dev server
+- **@mediapipe/hands** - gesture recognition
+- **@mediapipe/camera_utils** - camera handling
+- **Canvas API** - hand skeleton rendering
 
-## 📁 Структура проекта
+## 📁 Project Structure
 
 ```
 vision-os-gesture-app-new/
 └── frontend/
     ├── src/
-    │   ├── components/      # React компоненты UI
+    │   ├── components/      # React UI components
     │   ├── hooks/          # Custom hooks
-    │   ├── services/       # Бизнес-логика
-    │   ├── utils/          # Утилиты
-    │   ├── types/          # TypeScript типы
-    │   └── styles/         # Стили
+    │   ├── services/       # Business logic
+    │   ├── utils/          # Utilities
+    │   ├── types/          # TypeScript types
+    │   └── styles/         # Styles
     ├── package.json
     └── vite.config.ts
 ```
 
-## 🔧 Команды
+## 🔧 Commands
 
-- `npm run dev` - запуск dev-сервера
-- `npm run build` - сборка для production
-- `npm run preview` - предпросмотр production сборки
+- `npm run dev` - start dev server
+- `npm run build` - build for production
+- `npm run preview` - preview production build
 
-## ⚠️ Примечания
+## ⚠️ Notes
 
-- Для работы требуется доступ к веб-камере
-- MediaPipe загружает модели с CDN при первом запуске
-- Рекомендуется использовать Chrome для лучшей производительности
-- На Mac может потребоваться разрешить доступ к камере в настройках системы
+- Web camera access is required
+- MediaPipe loads models from CDN on first launch
+- Chrome is recommended for best performance
+- On Mac, you may need to allow camera access in system settings
 
-## 🐛 Решение проблем
+## 🐛 Troubleshooting
 
-**Камера не работает:**
+**Camera not working:**
 
-- Проверьте разрешения браузера на доступ к камере
-- Убедитесь, что камера не используется другим приложением
-- Попробуйте другой браузер
+- Check browser permissions for camera access
+- Make sure the camera is not being used by another application
+- Try a different browser
 
-**Медленная работа:**
+**Slow performance:**
 
-- Закройте другие вкладки браузера
-- Уменьшите разрешение камеры в коде (в `mediapipeService.ts`)
+- Close other browser tabs
+- Reduce camera resolution in code (in `mediapipeService.ts`)
 
-**Ошибки установки:**
+**Installation errors:**
 
-- Убедитесь, что Node.js версии 18+
-- Попробуйте удалить `node_modules` и `package-lock.json`, затем `npm install` заново
+- Make sure Node.js version is 18+
+- Try deleting `node_modules` and `package-lock.json`, then run `npm install` again
 
 ---
 
 <div align="center">
 
-**Сделано с ❤️ для сообщества**
+**Made with ❤️ for the community**
 
-⭐ Если проект вам понравился, поставьте звезду!
+⭐ If you liked the project, give it a star!
 
 </div>

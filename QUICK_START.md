@@ -1,39 +1,38 @@
-# 🚀 Быстрый старт
+# 🚀 Quick Start
 
-## Шаг 1: Установка зависимостей
+## Step 1: Install Dependencies
 
 ```bash
 cd frontend
 npm install
 ```
 
-## Шаг 2: Запуск приложения
+## Step 2: Run the Application
 
 ```bash
 npm run dev
 ```
 
-## Шаг 3: Открыть в браузере
+## Step 3: Open in Browser
 
-Приложение будет доступно по адресу: **http://localhost:5173**
+The application will be available at: **http://localhost:5173**
 
-При первом запуске браузер запросит разрешение на использование камеры - **разрешите доступ**.
+On first launch, the browser will request camera permission - **allow access**.
 
-## Готово! 🎉
+## Ready! 🎉
 
-Теперь вы можете:
-- Показывать жесты перед камерой
-- Наблюдать за распознаванием в реальном времени
-- Видеть визуализацию скелета руки
-- Отслеживать расширение пальцев, ориентацию и силу щипка
+Now you can:
+- Show gestures in front of the camera
+- Watch real-time recognition
+- See hand skeleton visualization
+- Track finger extension, orientation, and pinch strength
 
-## Поддерживаемые жесты
+## Supported Gestures
 
-- ✋ **OPEN** - открытая ладонь
-- ✊ **CLOSED** - кулак
-- 🤏 **PINCH** - щипок (большой и указательный пальцы)
-- 👍 **THUMBS_UP** - большой палец вверх
-- 👎 **THUMBS_DOWN** - большой палец вниз
-- 👆 **POINT** - указательный палец
-- ✌️ **VICTORY** - знак победы (указательный и средний)
-
+- ✋ **OPEN** - open palm
+- ✊ **CLOSED** - fist
+- 🤏 **PINCH** - pinch (thumb and index finger)
+- 👍 **THUMBS_UP** - thumbs up
+- 👎 **THUMBS_DOWN** - thumbs down
+- 👆 **POINT** - pointing finger
+- ✌️ **VICTORY** - victory sign (index and middle fingers)
