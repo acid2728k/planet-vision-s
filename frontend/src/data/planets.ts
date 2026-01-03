@@ -16,44 +16,40 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
     type: 'HYPERION',
     color: '#E8E8E8', // Светло-серый
     particleCount: 10000,
-    radius: 0.35,
+    radius: 0.7, // Увеличено в 2 раза (было 0.35)
     hasRings: false,
-    shape: 'irregular',
-    shapeParams: {
-      irregularity: 0.8, // Высокая неправильность (картофелевидный)
-      elongation: 0.6,
-    },
+    shape: 'model',
+    modelPath: '/models/moons/hyperion.glb',
   },
   EPIMETHEUS: {
     name: 'Epimetheus',
     type: 'EPIMETHEUS',
     color: '#F0F0F0', // Светло-серый
     particleCount: 9000,
-    radius: 0.3,
+    radius: 0.6, // Увеличено в 2 раза (было 0.3)
     hasRings: false,
-    shape: 'ellipsoid',
-    shapeParams: {
-      irregularity: 0.4,
-      elongation: 0.7, // Яйцевидная форма
-    },
+    shape: 'model',
+    modelPath: '/models/moons/epimetheus.glb',
   },
   TELESTO: {
     name: 'Telesto',
     type: 'TELESTO',
     color: '#F5F5F5', // Почти белый
     particleCount: 8000,
-    radius: 0.25,
+    radius: 0.5, // Увеличено в 2 раза (было 0.25)
     hasRings: false,
-    shape: 'sphere',
+    shape: 'model',
+    modelPath: '/models/moons/telesto.glb',
   },
   PHOEBE: {
     name: 'Phoebe',
     type: 'PHOEBE',
     color: '#D0D0D0', // Более темный серый
     particleCount: 8500,
-    radius: 0.3,
+    radius: 0.6, // Увеличено в 2 раза (было 0.3)
     hasRings: false,
-    shape: 'sphere',
+    shape: 'model',
+    modelPath: '/models/moons/phoebe.glb',
   },
 };
 
