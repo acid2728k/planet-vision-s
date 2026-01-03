@@ -1,4 +1,4 @@
-import { useRef, Suspense } from 'react';
+import { useRef, Suspense, ReactNode, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -25,7 +25,19 @@ const MOON_MODELS: Record<string, string> = {
  */
 function MoonMesh({ planet, rotationX, rotationY, rotationZ, zoom }: MoonModelProps) {
   const modelPath = MOON_MODELS[planet.type];
-  const { scene } = useGLTF(modelPath);
+  
+  console.log('🌙 MoonMesh: Loading model for', planet.type, 'from path:', modelPath);
+  
+  let scene;
+  try {
+    const gltf = useGLTF(modelPath);
+    scene = gltf.scene;
+    console.log('✅ MoonMesh: Model loaded successfully for', planet.type);
+  } catch (error) {
+    console.error('❌ MoonMesh: Failed to load model for', planet.type, ':', error);
+    throw error; // Пробрасываем ошибку, чтобы Suspense мог обработать
+  }
+  
   const groupRef = useRef<THREE.Group>(null);
 
   // Клонируем сцену, чтобы избежать проблем с переиспользованием
@@ -135,14 +147,47 @@ function MoonFallback({ planet, rotationX, rotationY, rotationZ, zoom }: MoonMod
 }
 
 /**
+ * Проверяет доступность модели через fetch
+ */
+async function checkModelExists(path: string): Promise<boolean> {
+  try {
+    const response = await fetch(path, { method: 'HEAD' });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Основной компонент для отображения спутника
  * Использует 3D модель, если доступна, иначе fallback
  */
 export function MoonModel(props: MoonModelProps) {
   const modelPath = MOON_MODELS[props.planet.type];
 
+  console.log('🪐 MoonModel: Rendering', props.planet.type, 'modelPath:', modelPath);
+
   if (!modelPath) {
-    // Если нет пути к модели, используем fallback
+    console.warn('⚠️ MoonModel: No model path for', props.planet.type, '- using fallback');
+    return <MoonFallback {...props} />;
+  }
+
+  // Проверяем доступность модели
+  const [modelExists, setModelExists] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    checkModelExists(modelPath).then((exists) => {
+      setModelExists(exists);
+      if (!exists) {
+        console.warn('⚠️ MoonModel: Model file not found:', modelPath, '- using fallback');
+      } else {
+        console.log('✅ MoonModel: Model file found:', modelPath);
+      }
+    });
+  }, [modelPath]);
+
+  // Если модель не найдена, используем fallback
+  if (modelExists === false) {
     return <MoonFallback {...props} />;
   }
 
@@ -151,6 +196,18 @@ export function MoonModel(props: MoonModelProps) {
       <MoonMesh {...props} />
     </Suspense>
   );
+}
+
+/**
+ * Простой Error Boundary для обработки ошибок загрузки моделей
+ */
+function ErrorBoundary({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
+  try {
+    return <>{children}</>;
+  } catch (error) {
+    console.error('❌ ErrorBoundary: Model loading error:', error);
+    return <>{fallback}</>;
+  }
 }
 
 // Предзагрузка моделей для лучшей производительности
