@@ -20,7 +20,7 @@ const INITIAL_STATE: PlanetControlState = {
   rotationX: 0,
   rotationY: 0,
   rotationZ: 0,
-  currentPlanet: 'EARTH',
+  currentPlanet: 'SATURN',
 };
 
 export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps) {
