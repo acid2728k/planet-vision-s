@@ -81,7 +81,7 @@ function calculateFingerRotation(
   const rotationX = deltaY * ROTATION_SENSITIVITY * 180;
 
   // Ограничиваем скорость вращения и применяем плавность
-  const maxRotation = 2.5; // градусов за кадр
+  const maxRotation = 2.0; // градусов за кадр (уменьшено для плавности)
   return {
     rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)) * ROTATION_SMOOTHING,
     rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)) * ROTATION_SMOOTHING,
