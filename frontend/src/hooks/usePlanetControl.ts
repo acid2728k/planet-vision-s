@@ -37,7 +37,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const previousWristRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
   const previousTimestampRef = useRef<number | undefined>(undefined);
   const lastSwipeTimeRef = useRef<number>(0);
-  const SWIPE_COOLDOWN = 300; // Минимальное время между swipe (мс) - уменьшено с 500
+  const SWIPE_COOLDOWN = 200; // Минимальное время между swipe (мс) - уменьшено для лучшей отзывчивости
 
   useEffect(() => {
     if (!handData || landmarks.length === 0) {
@@ -95,7 +95,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       });
 
       // Обрабатываем swipe для переключения спутников
-      // Переключение работает при разжатой кисти (avgExtension > 0.3)
+      // Переключение работает при разжатой кисти (avgExtension > 0.2 - снижено для лучшей отзывчивости)
       const avgExtension = (
         handData.fingerExtension.index +
         handData.fingerExtension.middle +
@@ -105,14 +105,14 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       
       // Логируем условия для отладки
       const hasSwipe = output.swipe.direction !== 'none';
-      const hasVelocity = output.swipe.velocity > 0.02;
-      const hasExtension = avgExtension > 0.3;
+      const hasVelocity = output.swipe.velocity > 0.01; // Снижено с 0.02 до 0.01
+      const hasExtension = avgExtension > 0.2; // Снижено с 0.3 до 0.2
       
       if (hasSwipe && !hasVelocity) {
         console.log('⚠️ Swipe detected but velocity too low:', {
           direction: output.swipe.direction,
           velocity: output.swipe.velocity,
-          threshold: 0.02,
+          threshold: 0.01,
         });
       }
       
@@ -121,7 +121,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           direction: output.swipe.direction,
           velocity: output.swipe.velocity,
           avgExtension,
-          threshold: 0.3,
+          threshold: 0.2,
         });
       }
       
