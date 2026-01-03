@@ -154,10 +154,14 @@ export function MoonModel(props: MoonModelProps) {
 }
 
 // Предзагрузка моделей для лучшей производительности
+// useGLTF.preload - статический метод из @react-three/drei
 export function preloadMoonModels() {
   Object.values(MOON_MODELS).forEach((path) => {
     try {
-      useGLTF.preload(path);
+      // @ts-ignore - useGLTF.preload может быть не в типах, но существует в runtime
+      if (useGLTF && useGLTF.preload) {
+        useGLTF.preload(path);
+      }
     } catch (error) {
       console.warn(`Failed to preload model: ${path}`, error);
     }
