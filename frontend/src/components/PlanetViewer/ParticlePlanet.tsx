@@ -49,6 +49,103 @@ function generateSphereParticles(
 }
 
 /**
+ * Генерирует позиции частиц для неправильной формы (картофелевидной)
+ */
+function generateIrregularParticles(
+  count: number,
+  radius: number,
+  irregularity: number = 0.8,
+  elongation: number = 0.6
+): { positions: Float32Array; sizes: Float32Array } {
+  const positions = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const random = () => Math.random() - 0.5;
+
+  for (let i = 0; i < count; i++) {
+    // Генерируем случайную точку внутри сферы
+    let x, y, z;
+    do {
+      x = random() * 2;
+      y = random() * 2;
+      z = random() * 2;
+    } while (x * x + y * y + z * z > 1);
+
+    // Нормализуем
+    const length = Math.sqrt(x * x + y * y + z * z);
+    x = x / length;
+    y = y / length;
+    z = z / length;
+
+    // Применяем неправильность - добавляем случайные вариации
+    const irregularX = x + (Math.random() - 0.5) * irregularity * 0.3;
+    const irregularY = y + (Math.random() - 0.5) * irregularity * 0.3;
+    const irregularZ = z + (Math.random() - 0.5) * irregularity * 0.3;
+
+    // Применяем вытянутость
+    const elongatedX = irregularX * (1 + elongation * 0.3);
+    const elongatedY = irregularY * (1 - elongation * 0.2);
+    const elongatedZ = irregularZ * (1 + elongation * 0.1);
+
+    // Нормализуем и масштабируем до радиуса
+    const newLength = Math.sqrt(elongatedX * elongatedX + elongatedY * elongatedY + elongatedZ * elongatedZ);
+    positions[i * 3] = (elongatedX / newLength) * radius;
+    positions[i * 3 + 1] = (elongatedY / newLength) * radius;
+    positions[i * 3 + 2] = (elongatedZ / newLength) * radius;
+
+    // Рандомный размер для каждой точки
+    sizes[i] = 0.015 + Math.random() * 0.025;
+  }
+
+  return { positions, sizes };
+}
+
+/**
+ * Генерирует позиции частиц для эллипсоидной формы (яйцевидной)
+ */
+function generateEllipsoidParticles(
+  count: number,
+  radius: number,
+  elongation: number = 0.7
+): { positions: Float32Array; sizes: Float32Array } {
+  const positions = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const random = () => Math.random() - 0.5;
+
+  for (let i = 0; i < count; i++) {
+    // Генерируем случайную точку внутри сферы
+    let x, y, z;
+    do {
+      x = random() * 2;
+      y = random() * 2;
+      z = random() * 2;
+    } while (x * x + y * y + z * z > 1);
+
+    // Нормализуем
+    const length = Math.sqrt(x * x + y * y + z * z);
+    x = x / length;
+    y = y / length;
+    z = z / length;
+
+    // Применяем эллипсоидную форму (яйцевидную)
+    // Удлиняем по одной оси, сжимаем по другой
+    const ellipsoidX = x * (1 + elongation * 0.4);
+    const ellipsoidY = y * (1 - elongation * 0.2);
+    const ellipsoidZ = z * (1 + elongation * 0.1);
+
+    // Нормализуем и масштабируем до радиуса
+    const newLength = Math.sqrt(ellipsoidX * ellipsoidX + ellipsoidY * ellipsoidY + ellipsoidZ * ellipsoidZ);
+    positions[i * 3] = (ellipsoidX / newLength) * radius;
+    positions[i * 3 + 1] = (ellipsoidY / newLength) * radius;
+    positions[i * 3 + 2] = (ellipsoidZ / newLength) * radius;
+
+    // Рандомный размер для каждой точки
+    sizes[i] = 0.015 + Math.random() * 0.025;
+  }
+
+  return { positions, sizes };
+}
+
+/**
  * Генерирует позиции частиц для колец планеты
  */
 function generateRingParticles(
@@ -128,10 +225,30 @@ export function ParticlePlanet({
   const planetGroupRef = useRef<THREE.Group>(null);
   const ringGroupRef = useRef<THREE.Group>(null);
 
-  // Генерируем геометрию частиц для планеты с рандомными размерами
+  // Генерируем геометрию частиц для планеты/спутника с учетом формы
   const planetData = useMemo(() => {
-    return generateSphereParticles(planet.particleCount, planet.radius);
-  }, [planet.particleCount, planet.radius]);
+    const shape = planet.shape || 'sphere';
+    const shapeParams = planet.shapeParams || {};
+
+    switch (shape) {
+      case 'irregular':
+        return generateIrregularParticles(
+          planet.particleCount,
+          planet.radius,
+          shapeParams.irregularity || 0.8,
+          shapeParams.elongation || 0.6
+        );
+      case 'ellipsoid':
+        return generateEllipsoidParticles(
+          planet.particleCount,
+          planet.radius,
+          shapeParams.elongation || 0.7
+        );
+      case 'sphere':
+      default:
+        return generateSphereParticles(planet.particleCount, planet.radius);
+    }
+  }, [planet.particleCount, planet.radius, planet.shape, planet.shapeParams]);
 
   // Генерируем геометрию частиц для колец (если есть)
   const ringData = useMemo(() => {

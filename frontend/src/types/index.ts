@@ -53,14 +53,13 @@ export interface NeuralHeatmapData {
 
 // Planet types
 export type PlanetType =
-  | "MERCURY"
-  | "VENUS"
-  | "EARTH"
-  | "MARS"
-  | "JUPITER"
   | "SATURN"
-  | "URANUS"
-  | "NEPTUNE";
+  | "HYPERION"
+  | "EPIMETHEUS"
+  | "TELESTO"
+  | "PHOEBE";
+
+export type MoonShape = "sphere" | "irregular" | "ellipsoid";
 
 export interface PlanetData {
   name: string;
@@ -70,6 +69,12 @@ export interface PlanetData {
   radius: number;
   hasRings: boolean;
   ringColor?: string;
+  shape?: MoonShape; // Форма спутника (для не-сферических)
+  shapeParams?: {
+    // Параметры для неправильных форм
+    irregularity?: number; // 0-1, степень неправильности
+    elongation?: number; // 0-1, вытянутость
+  };
 }
 
 export interface PlanetControlState {

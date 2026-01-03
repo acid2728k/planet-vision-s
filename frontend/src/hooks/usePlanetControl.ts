@@ -82,8 +82,16 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         currentPlanet: prev.currentPlanet,
       };
 
-      // Обрабатываем swipe для переключения планет
-      if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.15) {
+      // Обрабатываем swipe для переключения спутников
+      // Переключение работает ТОЛЬКО при разжатой кисти (avgExtension > 0.5)
+      const avgExtension = (
+        handData.fingerExtension.index +
+        handData.fingerExtension.middle +
+        handData.fingerExtension.ring +
+        handData.fingerExtension.pinky
+      ) / 4;
+      
+      if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.15 && avgExtension > 0.5) {
         const now = Date.now();
         if (now - lastSwipeTimeRef.current > SWIPE_COOLDOWN) {
           lastSwipeTimeRef.current = now;

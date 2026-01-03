@@ -1,46 +1,6 @@
 import { PlanetData, PlanetType } from '../types';
 
 export const PLANETS: Record<PlanetType, PlanetData> = {
-  MERCURY: {
-    name: 'Mercury',
-    type: 'MERCURY',
-    color: '#E8E8E8', // Светло-серый
-    particleCount: 8000,
-    radius: 0.4,
-    hasRings: false,
-  },
-  VENUS: {
-    name: 'Venus',
-    type: 'VENUS',
-    color: '#F5F5F5', // Почти белый
-    particleCount: 10000,
-    radius: 0.6,
-    hasRings: false,
-  },
-  EARTH: {
-    name: 'Earth',
-    type: 'EARTH',
-    color: '#FFFFFF', // Белый
-    particleCount: 12000,
-    radius: 0.6,
-    hasRings: false,
-  },
-  MARS: {
-    name: 'Mars',
-    type: 'MARS',
-    color: '#D8D8D8', // Серый
-    particleCount: 9000,
-    radius: 0.5,
-    hasRings: false,
-  },
-  JUPITER: {
-    name: 'Jupiter',
-    type: 'JUPITER',
-    color: '#F0F0F0', // Светло-серый
-    particleCount: 20000,
-    radius: 1.2,
-    hasRings: false,
-  },
   SATURN: {
     name: 'Saturn',
     type: 'SATURN',
@@ -49,36 +9,61 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
     radius: 1.0,
     hasRings: true,
     ringColor: '#E0E0E0', // Светло-серый для колец
+    shape: 'sphere',
   },
-  URANUS: {
-    name: 'Uranus',
-    type: 'URANUS',
-    color: '#F8F8F8', // Очень светло-серый
-    particleCount: 15000,
-    radius: 0.8,
-    hasRings: true,
-    ringColor: '#E8E8E8', // Светло-серый для колец
+  HYPERION: {
+    name: 'Hyperion',
+    type: 'HYPERION',
+    color: '#E8E8E8', // Светло-серый
+    particleCount: 10000,
+    radius: 0.35,
+    hasRings: false,
+    shape: 'irregular',
+    shapeParams: {
+      irregularity: 0.8, // Высокая неправильность (картофелевидный)
+      elongation: 0.6,
+    },
   },
-  NEPTUNE: {
-    name: 'Neptune',
-    type: 'NEPTUNE',
-    color: '#F2F2F2', // Светло-серый
-    particleCount: 15000,
-    radius: 0.8,
-    hasRings: true,
-    ringColor: '#D8D8D8', // Серый для колец
+  EPIMETHEUS: {
+    name: 'Epimetheus',
+    type: 'EPIMETHEUS',
+    color: '#F0F0F0', // Светло-серый
+    particleCount: 9000,
+    radius: 0.3,
+    hasRings: false,
+    shape: 'ellipsoid',
+    shapeParams: {
+      irregularity: 0.4,
+      elongation: 0.7, // Яйцевидная форма
+    },
+  },
+  TELESTO: {
+    name: 'Telesto',
+    type: 'TELESTO',
+    color: '#F5F5F5', // Почти белый
+    particleCount: 8000,
+    radius: 0.25,
+    hasRings: false,
+    shape: 'sphere',
+  },
+  PHOEBE: {
+    name: 'Phoebe',
+    type: 'PHOEBE',
+    color: '#D0D0D0', // Более темный серый
+    particleCount: 8500,
+    radius: 0.3,
+    hasRings: false,
+    shape: 'sphere',
   },
 };
 
+// Порядок переключения: Сатурн всегда первый, затем спутники
 export const PLANET_ORDER: PlanetType[] = [
-  'MERCURY',
-  'VENUS',
-  'EARTH',
-  'MARS',
-  'JUPITER',
   'SATURN',
-  'URANUS',
-  'NEPTUNE',
+  'HYPERION',
+  'EPIMETHEUS',
+  'TELESTO',
+  'PHOEBE',
 ];
 
 export function getNextPlanet(current: PlanetType): PlanetType {
