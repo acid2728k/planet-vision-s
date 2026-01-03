@@ -11,13 +11,12 @@ import styles from "./App.module.css";
 // Planet Vision S - только Planet Mode
 
 function App() {
-  const { videoRef, landmarks, handCount, fps, isInitialized, error, retry } =
+  const { videoRef, landmarks, isInitialized, error, retry } =
     useMediaPipe();
-  const [isRecording] = useState(true);
   const [pinchHistory, setPinchHistory] = useState<number[]>([]);
-  // Planet Vision S - только Planet Mode, Analysis Mode удален // Временно только analysis mode
+  // Planet Vision S - только Planet Mode
 
-  const { handData, heatmapData } = useHandTracking(landmarks, pinchHistory);
+  const { handData } = useHandTracking(landmarks, pinchHistory);
   
   // Управление планетой через жесты
   const { controlState } = usePlanetControl({
