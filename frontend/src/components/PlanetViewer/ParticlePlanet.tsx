@@ -253,12 +253,13 @@ export function ParticlePlanet({
   }, [planet.type, planet.particleCount, planet.radius, planet.shape, planet.shapeParams]);
 
   // Генерируем геометрию частиц для колец (если есть)
+  // ВАЖНО: включаем planet.type чтобы кольца обновлялись при смене планеты
   const ringData = useMemo(() => {
     if (!planet.hasRings) return null;
     const innerRadius = planet.radius * 1.2;
     const outerRadius = planet.radius * 1.8;
     return generateRingParticles(planet.particleCount * 0.3, innerRadius, outerRadius);
-  }, [planet.hasRings, planet.particleCount, planet.radius]);
+  }, [planet.type, planet.hasRings, planet.particleCount, planet.radius]);
 
   // Преобразуем цвет из hex в THREE.Color
   // ВАЖНО: включаем planet.type чтобы цвет обновлялся при смене планеты
@@ -270,7 +271,7 @@ export function ParticlePlanet({
   const ringColor = useMemo(() => {
     if (!planet.ringColor) return planetColor;
     return new THREE.Color(planet.ringColor);
-  }, [planet.ringColor, planetColor]);
+  }, [planet.type, planet.ringColor, planetColor]);
 
   // Создаем кастомный шейдер для круглых точек
   const planetShader = useMemo(() => {
@@ -307,12 +308,13 @@ export function ParticlePlanet({
   }, [ringShader]);
 
   // Создаем геометрию для частиц с атрибутом размера
+  // ВАЖНО: включаем planet.type чтобы геометрия пересоздавалась при смене планеты
   const planetGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(planetData.positions, 3));
     geometry.setAttribute('size', new THREE.Float32BufferAttribute(planetData.sizes, 1));
     return geometry;
-  }, [planetData]);
+  }, [planet.type, planetData]);
 
   const ringGeometry = useMemo(() => {
     if (!ringData) return null;
@@ -320,7 +322,7 @@ export function ParticlePlanet({
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(ringData.positions, 3));
     geometry.setAttribute('size', new THREE.Float32BufferAttribute(ringData.sizes, 1));
     return geometry;
-  }, [ringData]);
+  }, [planet.type, ringData]);
 
   // Анимация вращения и масштабирования
   useFrame(() => {
