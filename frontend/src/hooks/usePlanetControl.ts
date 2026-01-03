@@ -26,6 +26,11 @@ const INITIAL_STATE: PlanetControlState = {
 export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps) {
   const [controlState, setControlState] = useState<PlanetControlState>(INITIAL_STATE);
   
+  // Логируем изменения currentPlanet
+  useEffect(() => {
+    console.log('📡 usePlanetControl: controlState.currentPlanet =', controlState.currentPlanet);
+  }, [controlState.currentPlanet]);
+  
   // Храним предыдущие значения для вычисления дельт
   const previousIndexTipRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
   const previousOrientationRef = useRef<{ heading: number; pitch: number; roll: number } | undefined>(undefined);
