@@ -88,8 +88,15 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         rotationX: newRotationX,
         rotationY: newRotationY,
         rotationZ: newRotationZ,
-        currentPlanet: prev.currentPlanet,
+        currentPlanet: prev.currentPlanet, // Начинаем с предыдущей планеты
       };
+      
+      console.log('🔄 usePlanetControl setState called:', {
+        prevPlanet: prev.currentPlanet,
+        newStatePlanet: newState.currentPlanet,
+        swipeDirection: output.swipe.direction,
+        swipeVelocity: output.swipe.velocity,
+      });
 
       // Обрабатываем swipe для переключения спутников
       // Переключение работает ТОЛЬКО при разжатой кисти (avgExtension > 0.3)
@@ -128,6 +135,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           
           // Логируем финальное состояние для отладки
           console.log('📊 New controlState.currentPlanet:', newState.currentPlanet);
+          console.log('📦 Returning newState with planet:', newState.currentPlanet);
         }
       }
 
@@ -140,6 +148,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       };
       previousWristRef.current = wrist;
       previousTimestampRef.current = currentTimestamp;
+
+      console.log('✅ Returning state from setControlState:', {
+        planet: newState.currentPlanet,
+        zoom: newState.zoom,
+        rotationX: newState.rotationX,
+      });
 
       return newState;
     });

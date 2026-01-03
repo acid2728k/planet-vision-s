@@ -22,6 +22,13 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
   // Обновляем текущую планету при изменении
   useEffect(() => {
     const newPlanet = PLANETS[controlState.currentPlanet];
+    console.log('🔍 PlanetViewer useEffect triggered:', {
+      currentPlanetInState: controlState.currentPlanet,
+      newPlanetType: newPlanet.type,
+      previousPlanetType: previousPlanetRef.current.type,
+      willChange: newPlanet.type !== previousPlanetRef.current.type,
+    });
+    
     if (newPlanet.type !== previousPlanetRef.current.type) {
       console.log('🪐 Planet changed in PlanetViewer:', {
         from: previousPlanetRef.current.name,
