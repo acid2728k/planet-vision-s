@@ -136,12 +136,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       previousWristRef.current = wrist;
       previousTimestampRef.current = currentTimestamp;
 
-      // Сбрасываем флаг обработки после завершения
-      setTimeout(() => {
-        isProcessingRef.current = false;
-      }, 0);
-
       return newState;
+    });
+
+    // Сбрасываем флаг обработки после завершения через requestAnimationFrame
+    requestAnimationFrame(() => {
+      isProcessingRef.current = false;
     });
   }, [handData, landmarks]);
 
