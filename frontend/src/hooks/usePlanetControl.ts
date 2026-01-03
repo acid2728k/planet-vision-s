@@ -40,9 +40,13 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const lastSwipeDirectionRef = useRef<'left' | 'right' | 'none'>('none');
   const lastPinchTimeRef = useRef<number>(0);
   const lastVerticalMovementTimeRef = useRef<number>(0);
+  const previousPinchStrengthRef = useRef<number>(0);
+  const lastPinchSwitchTimeRef = useRef<number>(0);
   const SWIPE_COOLDOWN = 150; // Минимальное время между swipe (мс) - уменьшено для максимальной отзывчивости
   const PINCH_COOLDOWN = 300; // Минимальное время между pinch переключениями
+  const PINCH_SWITCH_COOLDOWN = 500; // Минимальное время между переключениями по простому pinch
   const VERTICAL_MOVEMENT_COOLDOWN = 200; // Минимальное время между вертикальными движениями
+  const PINCH_THRESHOLD = 0.7; // Порог для определения pinch
 
   useEffect(() => {
     if (!handData || landmarks.length === 0) {
