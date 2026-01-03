@@ -17,8 +17,9 @@ interface ParticlePlanetProps {
 function generateSphereParticles(
   count: number,
   radius: number
-): Float32Array {
+): { positions: Float32Array; sizes: Float32Array } {
   const positions = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
   const random = () => Math.random() - 0.5;
 
   for (let i = 0; i < count; i++) {
@@ -39,9 +40,12 @@ function generateSphereParticles(
     positions[i * 3] = x;
     positions[i * 3 + 1] = y;
     positions[i * 3 + 2] = z;
+
+    // Рандомный размер для каждой точки (от 0.015 до 0.04)
+    sizes[i] = 0.015 + Math.random() * 0.025;
   }
 
-  return positions;
+  return { positions, sizes };
 }
 
 /**
@@ -51,8 +55,9 @@ function generateRingParticles(
   count: number,
   innerRadius: number,
   outerRadius: number
-): Float32Array {
+): { positions: Float32Array; sizes: Float32Array } {
   const positions = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -64,9 +69,53 @@ function generateRingParticles(
     positions[i * 3] = x;
     positions[i * 3 + 1] = y;
     positions[i * 3 + 2] = z;
+
+    // Рандомный размер для каждой точки (от 0.01 до 0.03)
+    sizes[i] = 0.01 + Math.random() * 0.02;
   }
 
-  return positions;
+  return { positions, sizes };
+}
+
+/**
+ * Создает кастомный шейдер для круглых точек
+ */
+function createCirclePointShader(color: THREE.Color) {
+  return {
+    uniforms: {
+      color: { value: color },
+      pointTexture: { value: null },
+    },
+    vertexShader: `
+      attribute float size;
+      attribute vec3 color;
+      varying vec3 vColor;
+      varying float vSize;
+      
+      void main() {
+        vColor = color;
+        vSize = size;
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = size * (300.0 / -mvPosition.z);
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 color;
+      varying vec3 vColor;
+      varying float vSize;
+      
+      void main() {
+        vec2 center = gl_PointCoord - vec2(0.5);
+        float dist = length(center);
+        
+        // Создаем круг с мягкими краями
+        float alpha = 1.0 - smoothstep(0.4, 0.5, dist);
+        
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  };
 }
 
 export function ParticlePlanet({
@@ -79,13 +128,13 @@ export function ParticlePlanet({
   const planetGroupRef = useRef<THREE.Group>(null);
   const ringGroupRef = useRef<THREE.Group>(null);
 
-  // Генерируем геометрию частиц для планеты
-  const planetPositions = useMemo(() => {
+  // Генерируем геометрию частиц для планеты с рандомными размерами
+  const planetData = useMemo(() => {
     return generateSphereParticles(planet.particleCount, planet.radius);
   }, [planet.particleCount, planet.radius]);
 
   // Генерируем геометрию частиц для колец (если есть)
-  const ringPositions = useMemo(() => {
+  const ringData = useMemo(() => {
     if (!planet.hasRings) return null;
     const innerRadius = planet.radius * 1.2;
     const outerRadius = planet.radius * 1.8;
@@ -102,41 +151,55 @@ export function ParticlePlanet({
     return new THREE.Color(planet.ringColor);
   }, [planet.ringColor, planetColor]);
 
-  // Создаем материал для частиц
-  const planetMaterial = useMemo(() => {
-    return new THREE.PointsMaterial({
-      color: planetColor,
-      size: 0.02,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.9,
-    });
+  // Создаем кастомный шейдер для круглых точек
+  const planetShader = useMemo(() => {
+    return createCirclePointShader(planetColor);
   }, [planetColor]);
 
-  const ringMaterial = useMemo(() => {
-    if (!ringPositions) return null;
-    return new THREE.PointsMaterial({
-      color: ringColor,
-      size: 0.015,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.7,
-    });
-  }, [ringColor, ringPositions]);
+  const ringShader = useMemo(() => {
+    if (!ringData) return null;
+    return createCirclePointShader(ringColor);
+  }, [ringColor, ringData]);
 
-  // Создаем геометрию для частиц
+  // Создаем материал с кастомным шейдером
+  const planetMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: planetShader.uniforms,
+      vertexShader: planetShader.vertexShader,
+      fragmentShader: planetShader.fragmentShader,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+  }, [planetShader]);
+
+  const ringMaterial = useMemo(() => {
+    if (!ringShader) return null;
+    return new THREE.ShaderMaterial({
+      uniforms: ringShader.uniforms,
+      vertexShader: ringShader.vertexShader,
+      fragmentShader: ringShader.fragmentShader,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+  }, [ringShader]);
+
+  // Создаем геометрию для частиц с атрибутом размера
   const planetGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(planetPositions, 3));
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(planetData.positions, 3));
+    geometry.setAttribute('size', new THREE.Float32BufferAttribute(planetData.sizes, 1));
     return geometry;
-  }, [planetPositions]);
+  }, [planetData]);
 
   const ringGeometry = useMemo(() => {
-    if (!ringPositions) return null;
+    if (!ringData) return null;
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(ringPositions, 3));
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(ringData.positions, 3));
+    geometry.setAttribute('size', new THREE.Float32BufferAttribute(ringData.sizes, 1));
     return geometry;
-  }, [ringPositions]);
+  }, [ringData]);
 
   // Анимация вращения и масштабирования
   useFrame(() => {
