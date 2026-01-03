@@ -38,7 +38,11 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const previousTimestampRef = useRef<number | undefined>(undefined);
   const lastSwipeTimeRef = useRef<number>(0);
   const lastSwipeDirectionRef = useRef<'left' | 'right' | 'none'>('none');
+  const lastPinchTimeRef = useRef<number>(0);
+  const lastVerticalMovementTimeRef = useRef<number>(0);
   const SWIPE_COOLDOWN = 150; // Минимальное время между swipe (мс) - уменьшено для максимальной отзывчивости
+  const PINCH_COOLDOWN = 300; // Минимальное время между pinch переключениями
+  const VERTICAL_MOVEMENT_COOLDOWN = 200; // Минимальное время между вертикальными движениями
 
   useEffect(() => {
     if (!handData || landmarks.length === 0) {
@@ -100,75 +104,139 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         swipeVelocity: output.swipe.velocity,
       });
 
-      // Обрабатываем swipe для переключения спутников
-      // Упрощенная логика: переключение работает при любом обнаруженном свайпе
-      const hasSwipe = output.swipe.direction !== 'none';
-      const hasVelocity = output.swipe.velocity > 0.005; // Очень низкий порог для максимальной отзывчивости
+      // ===== АЛЬТЕРНАТИВНЫЕ ЖЕСТЫ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ПЛАНЕТ =====
+      const now = Date.now();
+      let planetSwitched = false;
       
-      // Логируем все свайпы для отладки
-      if (hasSwipe) {
-        console.log('🔍 Swipe detected:', {
-          direction: output.swipe.direction,
-          velocity: output.swipe.velocity,
-          hasVelocity,
-        });
+      // ЖЕСТ 1: Pinch (схлопывание большого и указательного пальцев) + движение влево/вправо
+      const pinchStrength = handData.pinch.strength;
+      const isPinching = pinchStrength > 0.7; // Сильный pinch
+      const hasSwipe = output.swipe.direction !== 'none';
+      const hasVelocity = output.swipe.velocity > 0.005;
+      
+      if (isPinching && hasSwipe && hasVelocity) {
+        const timeSinceLastPinch = now - lastPinchTimeRef.current;
+        if (timeSinceLastPinch > PINCH_COOLDOWN) {
+          lastPinchTimeRef.current = now;
+          lastSwipeDirectionRef.current = output.swipe.direction;
+          
+          console.log('✅ Planet switch (PINCH + SWIPE):', {
+            direction: output.swipe.direction,
+            pinchStrength,
+            from: currentPlanet,
+          });
+          
+          if (output.swipe.direction === 'right') {
+            currentPlanet = getNextPlanet(currentPlanet);
+            newState.currentPlanet = currentPlanet;
+            console.log('→ Next planet:', currentPlanet);
+          } else if (output.swipe.direction === 'left') {
+            currentPlanet = getPreviousPlanet(currentPlanet);
+            newState.currentPlanet = currentPlanet;
+            console.log('← Previous planet:', currentPlanet);
+          }
+          planetSwitched = true;
+        }
       }
       
-      // Упрощенное условие: переключаем планету при любом обнаруженном свайпе с минимальной скоростью
-      if (hasSwipe && hasVelocity) {
-        const now = Date.now();
+      // ЖЕСТ 2: Движение руки вверх/вниз (вертикальное движение)
+      if (!planetSwitched && previousWristRef.current) {
+        const deltaY = wrist.y - previousWristRef.current.y;
+        const absDeltaY = Math.abs(deltaY);
+        const VERTICAL_THRESHOLD = 0.02; // Порог для вертикального движения
+        
+        if (absDeltaY > VERTICAL_THRESHOLD) {
+          const timeSinceLastVertical = now - lastVerticalMovementTimeRef.current;
+          if (timeSinceLastVertical > VERTICAL_MOVEMENT_COOLDOWN) {
+            lastVerticalMovementTimeRef.current = now;
+            
+            console.log('✅ Planet switch (VERTICAL MOVEMENT):', {
+              deltaY,
+              absDeltaY,
+              from: currentPlanet,
+            });
+            
+            if (deltaY > 0) {
+              // Движение вверх → следующая планета
+              currentPlanet = getNextPlanet(currentPlanet);
+              newState.currentPlanet = currentPlanet;
+              console.log('↑ Next planet:', currentPlanet);
+            } else {
+              // Движение вниз → предыдущая планета
+              currentPlanet = getPreviousPlanet(currentPlanet);
+              newState.currentPlanet = currentPlanet;
+              console.log('↓ Previous planet:', currentPlanet);
+            }
+            planetSwitched = true;
+          }
+        }
+      }
+      
+      // ЖЕСТ 3: Вращение кисти (roll) - резкое изменение roll
+      if (!planetSwitched && previousOrientationRef.current) {
+        const deltaRoll = Math.abs(handData.orientation.roll - previousOrientationRef.current.roll);
+        const ROLL_THRESHOLD = 30; // Порог для резкого вращения (градусы)
+        
+        if (deltaRoll > ROLL_THRESHOLD) {
+          const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
+          if (timeSinceLastSwipe > SWIPE_COOLDOWN) {
+            lastSwipeTimeRef.current = now;
+            
+            console.log('✅ Planet switch (HAND ROTATION):', {
+              deltaRoll,
+              currentRoll: handData.orientation.roll,
+              from: currentPlanet,
+            });
+            
+            // Положительное вращение → следующая планета, отрицательное → предыдущая
+            if (handData.orientation.roll > previousOrientationRef.current.roll) {
+              currentPlanet = getNextPlanet(currentPlanet);
+              newState.currentPlanet = currentPlanet;
+              console.log('↻ Next planet:', currentPlanet);
+            } else {
+              currentPlanet = getPreviousPlanet(currentPlanet);
+              newState.currentPlanet = currentPlanet;
+              console.log('↺ Previous planet:', currentPlanet);
+            }
+            planetSwitched = true;
+          }
+        }
+      }
+      
+      // ЖЕСТ 4: Обычный свайп (резервный вариант)
+      if (!planetSwitched && hasSwipe && hasVelocity) {
         const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
         const isNewSwipe = output.swipe.direction !== lastSwipeDirectionRef.current;
         
-        // Переключаем планету только если:
-        // 1. Прошло достаточно времени с последнего свайпа (кулдаун)
-        // 2. ИЛИ это новый свайп в другом направлении
         if (timeSinceLastSwipe > SWIPE_COOLDOWN || isNewSwipe) {
           lastSwipeTimeRef.current = now;
           lastSwipeDirectionRef.current = output.swipe.direction;
           
-          console.log('✅ Planet switch triggered:', {
+          console.log('✅ Planet switch (SWIPE):', {
             direction: output.swipe.direction,
             velocity: output.swipe.velocity,
-            from: prev.currentPlanet,
-            timeSinceLastSwipe,
-            isNewSwipe,
+            from: currentPlanet,
           });
           
           if (output.swipe.direction === 'right') {
-            const nextPlanet = getNextPlanet(currentPlanet);
-            currentPlanet = nextPlanet;
-            newState.currentPlanet = nextPlanet;
-            console.log('→ Next planet:', nextPlanet, 'from', prev.currentPlanet);
+            currentPlanet = getNextPlanet(currentPlanet);
+            newState.currentPlanet = currentPlanet;
+            console.log('→ Next planet:', currentPlanet);
           } else if (output.swipe.direction === 'left') {
-            const prevPlanet = getPreviousPlanet(currentPlanet);
-            currentPlanet = prevPlanet;
-            newState.currentPlanet = prevPlanet;
-            console.log('← Previous planet:', prevPlanet, 'from', prev.currentPlanet);
+            currentPlanet = getPreviousPlanet(currentPlanet);
+            newState.currentPlanet = currentPlanet;
+            console.log('← Previous planet:', currentPlanet);
           }
-          
-          // Логируем финальное состояние для отладки
-          console.log('📊 New controlState.currentPlanet:', newState.currentPlanet);
-          console.log('📦 Returning newState with planet:', newState.currentPlanet);
-        } else {
-          console.log('⏱️ Swipe ignored (same direction or cooldown):', {
-            direction: output.swipe.direction,
-            lastDirection: lastSwipeDirectionRef.current,
-            timeSinceLastSwipe,
-            cooldown: SWIPE_COOLDOWN,
-            isNewSwipe,
-          });
+          planetSwitched = true;
         }
-      } else if (hasSwipe && !hasVelocity) {
-        console.log('⚠️ Swipe detected but velocity too low:', {
-          direction: output.swipe.direction,
-          velocity: output.swipe.velocity,
-          threshold: 0.005,
-        });
-      } else if (!hasSwipe) {
-        // Сбрасываем направление последнего свайпа, когда свайп закончился
+      }
+      
+      if (!hasSwipe) {
         lastSwipeDirectionRef.current = 'none';
       }
+      
+      // Обновляем currentPlanet в newState
+      newState.currentPlanet = currentPlanet;
 
       // Сохраняем текущие значения для следующего кадра
       previousIndexTipRef.current = indexTip;
