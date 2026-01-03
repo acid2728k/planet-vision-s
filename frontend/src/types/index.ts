@@ -50,3 +50,37 @@ export interface NeuralHeatmapData {
   height: number;
   activePixels: number;
 }
+
+// Planet types
+export type PlanetType =
+  | "MERCURY"
+  | "VENUS"
+  | "EARTH"
+  | "MARS"
+  | "JUPITER"
+  | "SATURN"
+  | "URANUS"
+  | "NEPTUNE";
+
+export interface PlanetData {
+  name: string;
+  type: PlanetType;
+  color: string;
+  particleCount: number;
+  radius: number;
+  hasRings: boolean;
+  ringColor?: string;
+}
+
+export interface PlanetControlState {
+  zoom: number; // 0.5 - 2.0
+  rotationX: number; // degrees
+  rotationY: number; // degrees
+  rotationZ: number; // degrees
+  currentPlanet: PlanetType;
+}
+
+export interface SwipeDirection {
+  direction: "left" | "right" | "none";
+  velocity: number;
+}

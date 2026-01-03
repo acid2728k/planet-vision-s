@@ -5,4 +5,5 @@ export { OrientationCompass } from './OrientationCompass/OrientationCompass';
 export { PinchAnalysis } from './PinchAnalysis/PinchAnalysis';
 export { NeuralHeatmap } from './NeuralHeatmap/NeuralHeatmap';
 export { DetectedGesture } from './DetectedGesture/DetectedGesture';
+export { PlanetViewer } from './PlanetViewer';
 

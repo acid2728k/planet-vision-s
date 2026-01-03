@@ -120,3 +120,62 @@ export function calculatePinch(
     history,
   };
 }
+
+/**
+ * Вычисляет скорость движения указательного пальца
+ */
+export function calculateIndexTipVelocity(
+  currentLandmarks: NormalizedLandmarkList,
+  previousLandmarks: NormalizedLandmarkList | undefined,
+  deltaTime: number
+): { velocity: number; direction: { x: number; y: number } } {
+  if (!previousLandmarks || deltaTime <= 0) {
+    return { velocity: 0, direction: { x: 0, y: 0 } };
+  }
+
+  const currentTip = landmarkToPoint(currentLandmarks[LANDMARKS.INDEX_TIP]);
+  const previousTip = landmarkToPoint(previousLandmarks[LANDMARKS.INDEX_TIP]);
+
+  const deltaX = currentTip.x - previousTip.x;
+  const deltaY = currentTip.y - previousTip.y;
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const velocity = distance / deltaTime;
+
+  return {
+    velocity,
+    direction: { x: deltaX, y: deltaY },
+  };
+}
+
+/**
+ * Вычисляет скорость движения запястья (для swipe detection)
+ */
+export function calculateWristVelocity(
+  currentLandmarks: NormalizedLandmarkList,
+  previousLandmarks: NormalizedLandmarkList | undefined,
+  deltaTime: number
+): { velocity: number; horizontalVelocity: number; direction: 'left' | 'right' | 'none' } {
+  if (!previousLandmarks || deltaTime <= 0) {
+    return { velocity: 0, horizontalVelocity: 0, direction: 'none' };
+  }
+
+  const currentWrist = landmarkToPoint(currentLandmarks[LANDMARKS.WRIST]);
+  const previousWrist = landmarkToPoint(previousLandmarks[LANDMARKS.WRIST]);
+
+  const deltaX = currentWrist.x - previousWrist.x;
+  const deltaY = currentWrist.y - previousWrist.y;
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const velocity = distance / deltaTime;
+  const horizontalVelocity = Math.abs(deltaX / deltaTime);
+
+  let direction: 'left' | 'right' | 'none' = 'none';
+  if (Math.abs(deltaX) > 0.01) {
+    direction = deltaX > 0 ? 'right' : 'left';
+  }
+
+  return {
+    velocity,
+    horizontalVelocity,
+    direction,
+  };
+}

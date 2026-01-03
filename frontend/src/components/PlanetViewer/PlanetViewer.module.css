@@ -1,0 +1,54 @@
+.planetViewer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  border: 1px solid #bb00ff;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  color: #bb00ff;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(187, 0, 255, 0.1);
+  border-bottom: 1px solid #bb00ff;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.planetName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #aa66cc;
+  text-transform: uppercase;
+}
+
+.canvasContainer {
+  flex: 1;
+  position: relative;
+  background: #000000;
+  min-height: 400px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(187, 0, 255, 0.05);
+  border-top: 1px solid #bb00ff;
+  font-size: 11px;
+  color: #aa66cc;
+}
+

@@ -184,3 +184,73 @@
     grid-template-columns: 1fr;
   }
 }
+
+.modeSwitcher {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(187, 0, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
+  justify-content: center;
+  align-items: center;
+}
+
+.modeButton {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--accent-purple);
+  border-radius: 4px;
+  color: var(--accent-purple);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.modeButton:hover {
+  background: rgba(187, 0, 255, 0.1);
+  box-shadow: 0 0 10px rgba(187, 0, 255, 0.3);
+}
+
+.modeButtonActive {
+  background: var(--accent-purple);
+  color: #000000;
+  box-shadow: 0 0 15px var(--accent-purple);
+}
+
+.planetMode {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  padding: 16px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  max-width: 1800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.planetViewerContainer {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.planetControls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+  .planetMode {
+    grid-template-columns: 1fr;
+  }
+}
