@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PlanetData } from '../../types';
+import { MoonModel } from './MoonModel';
 
 interface ParticlePlanetProps {
   planet: PlanetData;
@@ -353,6 +354,23 @@ export function ParticlePlanet({
     return new THREE.Points(ringGeometry, ringMaterial);
   }, [planet.type, ringGeometry, ringMaterial]);
 
+  // Для спутников используем 3D модели, для Сатурна - частицы
+  const isMoon = planet.type !== 'SATURN';
+
+  if (isMoon) {
+    // Используем 3D модель для спутников
+    return (
+      <MoonModel
+        planet={planet}
+        rotationX={rotationX}
+        rotationY={rotationY}
+        rotationZ={rotationZ}
+        zoom={zoom}
+      />
+    );
+  }
+
+  // Для Сатурна используем частицы с кольцами
   return (
     <group>
       <group ref={planetGroupRef}>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { ParticlePlanet } from './ParticlePlanet';
+import { preloadMoonModels } from './MoonModel';
 import { PlanetData, PlanetControlState, PlanetType } from '../../types';
 import { PLANETS, getNextPlanet, getPreviousPlanet } from '../../data/planets';
 import styles from './PlanetViewer.module.css';
@@ -17,6 +18,15 @@ export function PlanetViewer({ controlState, setPlanet, onPlanetChange }: Planet
   const currentPlanetData = PLANETS[controlState.currentPlanet];
   const canvasRef = useRef<HTMLDivElement>(null);
   const [planetNameSize, setPlanetNameSize] = useState(24); // Размер текста в пикселях
+
+  // Предзагружаем модели спутников при монтировании
+  useEffect(() => {
+    try {
+      preloadMoonModels();
+    } catch (error) {
+      console.warn('Failed to preload moon models:', error);
+    }
+  }, []);
 
   // Логируем каждое изменение планеты
   useEffect(() => {
