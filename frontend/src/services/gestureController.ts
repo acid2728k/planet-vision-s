@@ -17,7 +17,7 @@ const HAND_MOVEMENT_SENSITIVITY = 4.0; // Множитель для вращен
 const HAND_MOVEMENT_SMOOTHING = 0.12; // Плавность вращения движением ладони (увеличено)
 const HAND_ROTATION_SENSITIVITY = 0.5; // Множитель для вращения ориентацией кисти (увеличено)
 const HAND_ROTATION_SMOOTHING = 0.08; // Плавность вращения ориентацией кисти (увеличено)
-const SWIPE_THRESHOLD = 0.05; // Минимальная скорость для swipe (уменьшено для лучшей чувствительности)
+const SWIPE_THRESHOLD = 0.02; // Минимальная скорость для swipe (еще больше уменьшено)
 const DEAD_ZONE = 0.5; // Минимальное изменение для вращения кистью (degrees) (уменьшено)
 
 export interface GestureControlInput {
@@ -224,11 +224,23 @@ function detectSwipe(
   const velocity = absDeltaX / deltaTime;
 
   // Проверяем минимальное расстояние движения (чтобы избежать ложных срабатываний от дрожания)
-  const MIN_DISTANCE = 0.02; // Минимальное горизонтальное движение
+  const MIN_DISTANCE = 0.01; // Минимальное горизонтальное движение (уменьшено)
   
   // Проверяем, превышает ли скорость порог И движение достаточно большое
   if (velocity < SWIPE_THRESHOLD || absDeltaX < MIN_DISTANCE) {
     return { direction: 'none', velocity: 0 };
+  }
+  
+  // Логируем для отладки
+  if (velocity > 0.01) {
+    console.log('Swipe detection:', {
+      deltaX,
+      absDeltaX,
+      velocity,
+      deltaTime,
+      threshold: SWIPE_THRESHOLD,
+      minDistance: MIN_DISTANCE,
+    });
   }
 
   // Определяем направление

@@ -83,7 +83,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       };
 
       // Обрабатываем swipe для переключения спутников
-      // Переключение работает ТОЛЬКО при разжатой кисти (avgExtension > 0.4)
+      // Переключение работает ТОЛЬКО при разжатой кисти (avgExtension > 0.3)
       const avgExtension = (
         handData.fingerExtension.index +
         handData.fingerExtension.middle +
@@ -91,24 +91,46 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         handData.fingerExtension.pinky
       ) / 4;
       
-      // Уменьшили порог скорости и расширили условие для разжатой кисти
-      if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.05 && avgExtension > 0.4) {
+      // Логируем все swipe события для отладки
+      if (output.swipe.direction !== 'none') {
+        console.log('Swipe event:', {
+          direction: output.swipe.direction,
+          velocity: output.swipe.velocity,
+          avgExtension,
+          meetsVelocity: output.swipe.velocity > 0.02,
+          meetsExtension: avgExtension > 0.3,
+          currentPlanet: prev.currentPlanet,
+        });
+      }
+      
+      // Упростили условия: снизили пороги для лучшей отзывчивости
+      if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.02 && avgExtension > 0.3) {
         const now = Date.now();
-        if (now - lastSwipeTimeRef.current > SWIPE_COOLDOWN) {
+        const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
+        
+        if (timeSinceLastSwipe > SWIPE_COOLDOWN) {
           lastSwipeTimeRef.current = now;
           
-          console.log('Swipe detected:', {
+          console.log('✅ Planet switch triggered:', {
             direction: output.swipe.direction,
             velocity: output.swipe.velocity,
             avgExtension,
-            currentPlanet: prev.currentPlanet,
+            from: prev.currentPlanet,
+            timeSinceLastSwipe,
           });
           
           if (output.swipe.direction === 'right') {
             newState.currentPlanet = getNextPlanet(prev.currentPlanet);
+            console.log('→ Next planet:', newState.currentPlanet);
           } else if (output.swipe.direction === 'left') {
             newState.currentPlanet = getPreviousPlanet(prev.currentPlanet);
+            console.log('← Previous planet:', newState.currentPlanet);
           }
+        } else {
+          console.log('⏳ Swipe cooldown active:', {
+            timeSinceLastSwipe,
+            cooldown: SWIPE_COOLDOWN,
+          });
         }
       }
 
