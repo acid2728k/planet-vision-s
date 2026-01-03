@@ -54,47 +54,52 @@ function generateParticlesFromModel(
     return { positions, sizes };
   }
 
-  // Вычисляем bounding box для нормализации размера
-  const box = new THREE.Box3().setFromObject(scene);
-  const size = box.getSize(new THREE.Vector3());
-  const maxDimension = Math.max(size.x, size.y, size.z);
-  const scale = (targetRadius * 2) / maxDimension;
-
-  // Собираем все вершины из всех мешей
+  // Собираем все вершины из всех мешей (используем локальные координаты)
   const allVertices: THREE.Vector3[] = [];
   
   meshes.forEach((mesh) => {
     const geometry = mesh.geometry;
     if (!geometry.attributes.position) return;
 
+    // Убеждаемся, что геометрия не индексирована, или используем индексы
     const positionAttribute = geometry.attributes.position;
+    const indexAttribute = geometry.index;
     
-    // Применяем матрицу меша для получения мировых координат
-    const matrix = mesh.matrixWorld.clone();
-    
-    for (let i = 0; i < positionAttribute.count; i++) {
-      const vertex = new THREE.Vector3(
-        positionAttribute.getX(i),
-        positionAttribute.getY(i),
-        positionAttribute.getZ(i)
-      );
-      
-      // Преобразуем в мировые координаты
-      vertex.applyMatrix4(matrix);
-      
-      // Масштабируем до нужного размера
-      vertex.multiplyScalar(scale);
-      
-      allVertices.push(vertex);
+    // Если есть индексы, используем их для получения всех вершин (включая повторяющиеся)
+    if (indexAttribute) {
+      for (let i = 0; i < indexAttribute.count; i++) {
+        const vertexIndex = indexAttribute.getX(i);
+        const vertex = new THREE.Vector3(
+          positionAttribute.getX(vertexIndex),
+          positionAttribute.getY(vertexIndex),
+          positionAttribute.getZ(vertexIndex)
+        );
+        
+        // Применяем локальную матрицу меша
+        vertex.applyMatrix4(mesh.matrix);
+        allVertices.push(vertex);
+      }
+    } else {
+      // Если индексов нет, используем все вершины напрямую
+      for (let i = 0; i < positionAttribute.count; i++) {
+        const vertex = new THREE.Vector3(
+          positionAttribute.getX(i),
+          positionAttribute.getY(i),
+          positionAttribute.getZ(i)
+        );
+        
+        // Применяем локальную матрицу меша
+        vertex.applyMatrix4(mesh.matrix);
+        allVertices.push(vertex);
+      }
     }
   });
 
   console.log(`📊 MoonParticles: Found ${allVertices.length} vertices from model`);
 
-  // Если вершин недостаточно, используем интерполяцию
+  // Если вершин недостаточно, используем fallback
   if (allVertices.length === 0) {
-    console.warn('No vertices found in model');
-    // Fallback
+    console.warn('No vertices found in model, using fallback');
     for (let i = 0; i < particleCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
@@ -107,12 +112,30 @@ function generateParticlesFromModel(
     return { positions, sizes };
   }
 
+  // Вычисляем bounding box для нормализации размера
+  const tempBox = new THREE.Box3();
+  allVertices.forEach(vertex => tempBox.expandByPoint(vertex));
+  const size = tempBox.getSize(new THREE.Vector3());
+  const maxDimension = Math.max(size.x, size.y, size.z);
+  const scale = (targetRadius * 2) / maxDimension;
+  
+  // Центрируем модель
+  const center = tempBox.getCenter(new THREE.Vector3());
+
+  // Масштабируем и центрируем все вершины
+  const scaledVertices = allVertices.map(vertex => {
+    const scaled = vertex.clone();
+    scaled.sub(center); // Центрируем
+    scaled.multiplyScalar(scale); // Масштабируем
+    return scaled;
+  });
+
   // Генерируем частицы, выбирая вершины из модели
-  // Если вершин больше, чем нужно частиц, выбираем случайные
-  // Если вершин меньше, повторяем выбор с вариацией
+  // Используем случайный выбор для лучшего покрытия всех граней
   for (let i = 0; i < particleCount; i++) {
-    const vertexIndex = i % allVertices.length;
-    const baseVertex = allVertices[vertexIndex].clone();
+    // Случайный выбор вершины для лучшего покрытия
+    const vertexIndex = Math.floor(Math.random() * scaledVertices.length);
+    const baseVertex = scaledVertices[vertexIndex].clone();
     
     // Добавляем небольшую вариацию для более естественного вида
     const variation = 0.01;
