@@ -37,7 +37,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const previousWristRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
   const previousTimestampRef = useRef<number | undefined>(undefined);
   const lastSwipeTimeRef = useRef<number>(0);
-  const SWIPE_COOLDOWN = 200; // Минимальное время между swipe (мс) - уменьшено для лучшей отзывчивости
+  const SWIPE_COOLDOWN = 150; // Минимальное время между swipe (мс) - уменьшено для максимальной отзывчивости
 
   useEffect(() => {
     if (!handData || landmarks.length === 0) {
@@ -95,38 +95,21 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       });
 
       // Обрабатываем swipe для переключения спутников
-      // Переключение работает при разжатой кисти (avgExtension > 0.2 - снижено для лучшей отзывчивости)
-      const avgExtension = (
-        handData.fingerExtension.index +
-        handData.fingerExtension.middle +
-        handData.fingerExtension.ring +
-        handData.fingerExtension.pinky
-      ) / 4;
-      
-      // Логируем условия для отладки
+      // Упрощенная логика: переключение работает при любом обнаруженном свайпе
       const hasSwipe = output.swipe.direction !== 'none';
-      const hasVelocity = output.swipe.velocity > 0.01; // Снижено с 0.02 до 0.01
-      const hasExtension = avgExtension > 0.2; // Снижено с 0.3 до 0.2
+      const hasVelocity = output.swipe.velocity > 0.005; // Очень низкий порог для максимальной отзывчивости
       
-      if (hasSwipe && !hasVelocity) {
-        console.log('⚠️ Swipe detected but velocity too low:', {
+      // Логируем все свайпы для отладки
+      if (hasSwipe) {
+        console.log('🔍 Swipe detected:', {
           direction: output.swipe.direction,
           velocity: output.swipe.velocity,
-          threshold: 0.01,
+          hasVelocity,
         });
       }
       
-      if (hasSwipe && hasVelocity && !hasExtension) {
-        console.log('⚠️ Swipe detected but fingers too closed:', {
-          direction: output.swipe.direction,
-          velocity: output.swipe.velocity,
-          avgExtension,
-          threshold: 0.2,
-        });
-      }
-      
-      // Упростили условия: снизили пороги для лучшей отзывчивости
-      if (hasSwipe && hasVelocity && hasExtension) {
+      // Упрощенное условие: переключаем планету при любом обнаруженном свайпе с минимальной скоростью
+      if (hasSwipe && hasVelocity) {
         const now = Date.now();
         const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
         
@@ -136,7 +119,6 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           console.log('✅ Planet switch triggered:', {
             direction: output.swipe.direction,
             velocity: output.swipe.velocity,
-            avgExtension,
             from: prev.currentPlanet,
             timeSinceLastSwipe,
           });
@@ -161,6 +143,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
             remaining: SWIPE_COOLDOWN - timeSinceLastSwipe,
           });
         }
+      } else if (hasSwipe && !hasVelocity) {
+        console.log('⚠️ Swipe detected but velocity too low:', {
+          direction: output.swipe.direction,
+          velocity: output.swipe.velocity,
+          threshold: 0.005,
+        });
       }
 
       // Сохраняем текущие значения для следующего кадра
