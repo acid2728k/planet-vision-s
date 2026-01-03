@@ -95,7 +95,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       });
 
       // Обрабатываем swipe для переключения спутников
-      // Переключение работает ТОЛЬКО при разжатой кисти (avgExtension > 0.3)
+      // Переключение работает при разжатой кисти (avgExtension > 0.3)
       const avgExtension = (
         handData.fingerExtension.index +
         handData.fingerExtension.middle +
@@ -103,8 +103,30 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         handData.fingerExtension.pinky
       ) / 4;
       
+      // Логируем условия для отладки
+      const hasSwipe = output.swipe.direction !== 'none';
+      const hasVelocity = output.swipe.velocity > 0.02;
+      const hasExtension = avgExtension > 0.3;
+      
+      if (hasSwipe && !hasVelocity) {
+        console.log('⚠️ Swipe detected but velocity too low:', {
+          direction: output.swipe.direction,
+          velocity: output.swipe.velocity,
+          threshold: 0.02,
+        });
+      }
+      
+      if (hasSwipe && hasVelocity && !hasExtension) {
+        console.log('⚠️ Swipe detected but fingers too closed:', {
+          direction: output.swipe.direction,
+          velocity: output.swipe.velocity,
+          avgExtension,
+          threshold: 0.3,
+        });
+      }
+      
       // Упростили условия: снизили пороги для лучшей отзывчивости
-      if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.02 && avgExtension > 0.3) {
+      if (hasSwipe && hasVelocity && hasExtension) {
         const now = Date.now();
         const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
         
@@ -132,6 +154,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           // Логируем финальное состояние для отладки
           console.log('📊 New controlState.currentPlanet:', newState.currentPlanet);
           console.log('📦 Returning newState with planet:', newState.currentPlanet);
+        } else {
+          console.log('⏱️ Swipe cooldown active:', {
+            timeSinceLastSwipe,
+            cooldown: SWIPE_COOLDOWN,
+            remaining: SWIPE_COOLDOWN - timeSinceLastSwipe,
+          });
         }
       }
 
