@@ -37,6 +37,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const previousWristRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
   const previousTimestampRef = useRef<number | undefined>(undefined);
   const lastSwipeTimeRef = useRef<number>(0);
+  const lastSwipeDirectionRef = useRef<'left' | 'right' | 'none'>('none');
   const SWIPE_COOLDOWN = 150; // Минимальное время между swipe (мс) - уменьшено для максимальной отзывчивости
 
   useEffect(() => {
@@ -112,15 +113,21 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       if (hasSwipe && hasVelocity) {
         const now = Date.now();
         const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
+        const isNewSwipe = output.swipe.direction !== lastSwipeDirectionRef.current;
         
-        if (timeSinceLastSwipe > SWIPE_COOLDOWN) {
+        // Переключаем планету только если:
+        // 1. Прошло достаточно времени с последнего свайпа (кулдаун)
+        // 2. ИЛИ это новый свайп в другом направлении
+        if (timeSinceLastSwipe > SWIPE_COOLDOWN || isNewSwipe) {
           lastSwipeTimeRef.current = now;
+          lastSwipeDirectionRef.current = output.swipe.direction;
           
           console.log('✅ Planet switch triggered:', {
             direction: output.swipe.direction,
             velocity: output.swipe.velocity,
             from: prev.currentPlanet,
             timeSinceLastSwipe,
+            isNewSwipe,
           });
           
           if (output.swipe.direction === 'right') {
@@ -137,10 +144,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           console.log('📊 New controlState.currentPlanet:', newState.currentPlanet);
           console.log('📦 Returning newState with planet:', newState.currentPlanet);
         } else {
-          console.log('⏱️ Swipe cooldown active:', {
+          console.log('⏱️ Swipe ignored (same direction or cooldown):', {
+            direction: output.swipe.direction,
+            lastDirection: lastSwipeDirectionRef.current,
             timeSinceLastSwipe,
             cooldown: SWIPE_COOLDOWN,
-            remaining: SWIPE_COOLDOWN - timeSinceLastSwipe,
+            isNewSwipe,
           });
         }
       } else if (hasSwipe && !hasVelocity) {
@@ -149,6 +158,9 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           velocity: output.swipe.velocity,
           threshold: 0.005,
         });
+      } else if (!hasSwipe) {
+        // Сбрасываем направление последнего свайпа, когда свайп закончился
+        lastSwipeDirectionRef.current = 'none';
       }
 
       // Сохраняем текущие значения для следующего кадра
