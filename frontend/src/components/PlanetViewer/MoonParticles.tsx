@@ -126,20 +126,6 @@ function generateParticlesFromModel(
     sizes[i] = 0.015 + Math.random() * 0.025;
   }
 
-  // Если не удалось сгенерировать достаточно частиц, заполняем оставшиеся случайными точками
-  if (generated < particleCount) {
-    console.warn(`Only generated ${generated} particles, filling rest with random points`);
-    for (let i = generated; i < particleCount; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = targetRadius;
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = r * Math.cos(phi);
-      sizes[i] = 0.015 + Math.random() * 0.025;
-    }
-  }
-
   return { positions, sizes };
 }
 
