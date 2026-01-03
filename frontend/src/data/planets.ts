@@ -4,7 +4,7 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
   MERCURY: {
     name: 'Mercury',
     type: 'MERCURY',
-    color: '#8C7853',
+    color: '#E8E8E8', // Светло-серый
     particleCount: 8000,
     radius: 0.4,
     hasRings: false,
@@ -12,7 +12,7 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
   VENUS: {
     name: 'Venus',
     type: 'VENUS',
-    color: '#FFC649',
+    color: '#F5F5F5', // Почти белый
     particleCount: 10000,
     radius: 0.6,
     hasRings: false,
@@ -20,7 +20,7 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
   EARTH: {
     name: 'Earth',
     type: 'EARTH',
-    color: '#6B93D6',
+    color: '#FFFFFF', // Белый
     particleCount: 12000,
     radius: 0.6,
     hasRings: false,
@@ -28,7 +28,7 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
   MARS: {
     name: 'Mars',
     type: 'MARS',
-    color: '#C1440E',
+    color: '#D8D8D8', // Серый
     particleCount: 9000,
     radius: 0.5,
     hasRings: false,
@@ -36,7 +36,7 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
   JUPITER: {
     name: 'Jupiter',
     type: 'JUPITER',
-    color: '#D8CA9D',
+    color: '#F0F0F0', // Светло-серый
     particleCount: 20000,
     radius: 1.2,
     hasRings: false,
@@ -44,29 +44,29 @@ export const PLANETS: Record<PlanetType, PlanetData> = {
   SATURN: {
     name: 'Saturn',
     type: 'SATURN',
-    color: '#FAD5A5',
+    color: '#FAFAFA', // Почти белый
     particleCount: 18000,
     radius: 1.0,
     hasRings: true,
-    ringColor: '#C9B037',
+    ringColor: '#E0E0E0', // Светло-серый для колец
   },
   URANUS: {
     name: 'Uranus',
     type: 'URANUS',
-    color: '#4FD0E7',
+    color: '#F8F8F8', // Очень светло-серый
     particleCount: 15000,
     radius: 0.8,
     hasRings: true,
-    ringColor: '#4FD0E7',
+    ringColor: '#E8E8E8', // Светло-серый для колец
   },
   NEPTUNE: {
     name: 'Neptune',
     type: 'NEPTUNE',
-    color: '#4B70DD',
+    color: '#F2F2F2', // Светло-серый
     particleCount: 15000,
     radius: 0.8,
     hasRings: true,
-    ringColor: '#4B70DD',
+    ringColor: '#D8D8D8', // Серый для колец
   },
 };
 

@@ -54,6 +54,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       landmarks: mainHandLandmarks,
       orientation: handData.orientation,
       pinch: handData.pinch,
+      fingerExtension: handData.fingerExtension,
       previousIndexTip: previousIndexTipRef.current,
       previousOrientation: previousOrientationRef.current,
       previousWrist: previousWristRef.current,

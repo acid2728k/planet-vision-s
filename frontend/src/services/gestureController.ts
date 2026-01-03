@@ -1,5 +1,5 @@
 import { NormalizedLandmarkList } from '@mediapipe/hands';
-import { HandOrientation, PinchData, PlanetControlState, SwipeDirection } from '../types';
+import { HandOrientation, PinchData, PlanetControlState, SwipeDirection, FingerExtension } from '../types';
 import { landmarkToPoint, Point3D, distance2D } from '../utils/mathUtils';
 
 const LANDMARKS = {
@@ -10,16 +10,19 @@ const LANDMARKS = {
 // Константы для управления
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
-const ZOOM_SENSITIVITY = 1.2; // Множитель для pinch strength (уменьшено для более плавного зума)
-const ROTATION_SENSITIVITY = 1.5; // Множитель для вращения пальцем (уменьшено для более плавного вращения)
-const HAND_ROTATION_SENSITIVITY = 0.3; // Множитель для вращения кистью (уменьшено для более плавного вращения)
-const SWIPE_THRESHOLD = 0.12; // Минимальная скорость для swipe (уменьшено для более чувствительного swipe)
-const DEAD_ZONE = 1.5; // Минимальное изменение для вращения кистью (degrees) (уменьшено для более чувствительного управления)
+const ZOOM_SMOOTHING = 0.08; // Плавность зума (меньше = плавнее)
+const ROTATION_SENSITIVITY = 1.2; // Множитель для вращения пальцем
+const ROTATION_SMOOTHING = 0.12; // Плавность вращения
+const HAND_ROTATION_SENSITIVITY = 0.25; // Множитель для вращения кистью
+const HAND_ROTATION_SMOOTHING = 0.1; // Плавность вращения кистью
+const SWIPE_THRESHOLD = 0.12; // Минимальная скорость для swipe
+const DEAD_ZONE = 1.5; // Минимальное изменение для вращения кистью (degrees)
 
 export interface GestureControlInput {
   landmarks: NormalizedLandmarkList;
   orientation: HandOrientation;
   pinch: PinchData;
+  fingerExtension: FingerExtension;
   previousIndexTip?: Point3D;
   previousOrientation?: HandOrientation;
   previousWrist?: Point3D;
@@ -34,18 +37,27 @@ export interface GestureControlOutput {
 }
 
 /**
- * Вычисляет zoom на основе pinch жеста
+ * Вычисляет zoom на основе раскрытия/схлопывания ладони
+ * Раскрытая ладонь (OPEN) -> zoom out (уменьшение)
+ * Схлопнутые пальцы (CLOSED) -> zoom in (увеличение)
  */
-function calculateZoom(pinch: PinchData, currentZoom: number): number {
-  // Маппинг pinch.strength (0-1) в zoom (0.5x - 2.0x)
-  // Когда pinch = 0 (пальцы разжаты) -> zoom = 0.5x
-  // Когда pinch = 1 (пальцы сжаты) -> zoom = 2.0x
-  const targetZoom = ZOOM_MIN + (ZOOM_MAX - ZOOM_MIN) * pinch.strength * ZOOM_SENSITIVITY;
+function calculateZoom(fingerExtension: FingerExtension, currentZoom: number): number {
+  // Вычисляем среднее раскрытие всех пальцев (кроме большого)
+  const avgExtension = (
+    fingerExtension.index +
+    fingerExtension.middle +
+    fingerExtension.ring +
+    fingerExtension.pinky
+  ) / 4;
+
+  // Маппинг: раскрытая ладонь (1.0) -> zoom out (0.5x)
+  //           схлопнутые пальцы (0.0) -> zoom in (2.0x)
+  // Инвертируем: чем больше раскрытие, тем меньше zoom
+  const targetZoom = ZOOM_MIN + (ZOOM_MAX - ZOOM_MIN) * (1 - avgExtension);
   const clampedZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, targetZoom));
   
-  // Плавная интерполяция для избежания рывков
-  const smoothing = 0.15; // Увеличено для более плавного зума
-  return currentZoom + (clampedZoom - currentZoom) * smoothing;
+  // Плавная интерполяция
+  return currentZoom + (clampedZoom - currentZoom) * ZOOM_SMOOTHING;
 }
 
 /**
@@ -68,11 +80,11 @@ function calculateFingerRotation(
   const rotationY = -deltaX * ROTATION_SENSITIVITY * 180;
   const rotationX = deltaY * ROTATION_SENSITIVITY * 180;
 
-  // Ограничиваем скорость вращения
-  const maxRotation = 3.0; // градусов за кадр (уменьшено для более плавного вращения)
+  // Ограничиваем скорость вращения и применяем плавность
+  const maxRotation = 2.5; // градусов за кадр
   return {
-    rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)),
-    rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)),
+    rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)) * ROTATION_SMOOTHING,
+    rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)) * ROTATION_SMOOTHING,
   };
 }
 
@@ -102,14 +114,14 @@ function calculateHandRotation(
     return value;
   };
 
-  // Маппинг изменений ориентации в вращение модели
+  // Маппинг изменений ориентации в вращение модели с плавностью
   // heading -> rotationY (вращение вокруг вертикальной оси)
   // roll -> rotationZ (вращение вокруг оси Z)
   // pitch -> rotationX (вращение вокруг оси X)
   return {
-    rotationX: applyDeadZone(deltaPitch * HAND_ROTATION_SENSITIVITY),
-    rotationY: applyDeadZone(deltaHeading * HAND_ROTATION_SENSITIVITY),
-    rotationZ: applyDeadZone(deltaRoll * HAND_ROTATION_SENSITIVITY * 0.5), // Меньшая чувствительность для roll
+    rotationX: applyDeadZone(deltaPitch * HAND_ROTATION_SENSITIVITY) * HAND_ROTATION_SMOOTHING,
+    rotationY: applyDeadZone(deltaHeading * HAND_ROTATION_SENSITIVITY) * HAND_ROTATION_SMOOTHING,
+    rotationZ: applyDeadZone(deltaRoll * HAND_ROTATION_SENSITIVITY * 0.5) * HAND_ROTATION_SMOOTHING,
   };
 }
 
@@ -157,8 +169,8 @@ export function processGestureControl(
   const indexTip = landmarkToPoint(input.landmarks[LANDMARKS.INDEX_TIP]);
   const wrist = landmarkToPoint(input.landmarks[LANDMARKS.WRIST]);
 
-  // Zoom через pinch
-  const zoom = calculateZoom(input.pinch, currentState.zoom);
+  // Zoom через раскрытие/схлопывание ладони
+  const zoom = calculateZoom(input.fingerExtension, currentState.zoom);
 
   // Вращение пальцем
   const fingerRotation = calculateFingerRotation(indexTip, input.previousIndexTip);
