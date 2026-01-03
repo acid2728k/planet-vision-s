@@ -60,16 +60,15 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       previousWrist: previousWristRef.current,
     };
 
-    // Обрабатываем жесты
-    const output = processGestureControl(
-      input,
-      controlState,
-      currentTimestamp,
-      previousTimestampRef.current
-    );
-
-    // Обновляем состояние управления
+    // Обрабатываем жесты - используем функциональное обновление для избежания проблем с зависимостями
     setControlState((prev) => {
+      const output = processGestureControl(
+        input,
+        prev,
+        currentTimestamp,
+        previousTimestampRef.current
+      );
+
       // Накопление углов вращения
       const newRotationX = prev.rotationX + output.rotationX;
       const newRotationY = prev.rotationY + output.rotationY;
@@ -97,19 +96,19 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         }
       }
 
+      // Сохраняем текущие значения для следующего кадра
+      previousIndexTipRef.current = indexTip;
+      previousOrientationRef.current = {
+        heading: handData.orientation.heading,
+        pitch: handData.orientation.pitch,
+        roll: handData.orientation.roll,
+      };
+      previousWristRef.current = wrist;
+      previousTimestampRef.current = currentTimestamp;
+
       return newState;
     });
-
-    // Сохраняем текущие значения для следующего кадра
-    previousIndexTipRef.current = indexTip;
-    previousOrientationRef.current = {
-      heading: handData.orientation.heading,
-      pitch: handData.orientation.pitch,
-      roll: handData.orientation.roll,
-    };
-    previousWristRef.current = wrist;
-    previousTimestampRef.current = currentTimestamp;
-  }, [handData, landmarks, controlState]);
+  }, [handData, landmarks]);
 
   // Функция для сброса вращения (можно использовать для калибровки)
   const resetRotation = () => {

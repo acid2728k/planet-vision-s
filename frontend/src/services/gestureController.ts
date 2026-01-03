@@ -10,15 +10,15 @@ const LANDMARKS = {
 // Константы для управления
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
-const ZOOM_SMOOTHING = 0.04; // Плавность зума (уменьшено для еще большей плавности)
-const ROTATION_SENSITIVITY = 1.0; // Множитель для вращения пальцем
-const ROTATION_SMOOTHING = 0.06; // Плавность вращения пальцем
-const HAND_MOVEMENT_SENSITIVITY = 2.5; // Множитель для вращения движением ладони (быстрее)
-const HAND_MOVEMENT_SMOOTHING = 0.08; // Плавность вращения движением ладони
-const HAND_ROTATION_SENSITIVITY = 0.2; // Множитель для вращения ориентацией кисти
-const HAND_ROTATION_SMOOTHING = 0.05; // Плавность вращения ориентацией кисти
+const ZOOM_SMOOTHING = 0.04; // Плавность зума
+const ROTATION_SENSITIVITY = 3.0; // Множитель для вращения пальцем (увеличено)
+const ROTATION_SMOOTHING = 0.1; // Плавность вращения пальцем (увеличено)
+const HAND_MOVEMENT_SENSITIVITY = 4.0; // Множитель для вращения движением ладони (увеличено)
+const HAND_MOVEMENT_SMOOTHING = 0.12; // Плавность вращения движением ладони (увеличено)
+const HAND_ROTATION_SENSITIVITY = 0.5; // Множитель для вращения ориентацией кисти (увеличено)
+const HAND_ROTATION_SMOOTHING = 0.08; // Плавность вращения ориентацией кисти (увеличено)
 const SWIPE_THRESHOLD = 0.12; // Минимальная скорость для swipe
-const DEAD_ZONE = 1.5; // Минимальное изменение для вращения кистью (degrees)
+const DEAD_ZONE = 0.5; // Минимальное изменение для вращения кистью (degrees) (уменьшено)
 
 export interface GestureControlInput {
   landmarks: NormalizedLandmarkList;
@@ -42,9 +42,11 @@ export interface GestureControlOutput {
  * Вычисляет zoom на основе раскрытия/схлопывания ладони
  * Раскрытая ладонь (OPEN) -> zoom out (уменьшение)
  * Схлопнутые пальцы (CLOSED) -> zoom in (увеличение)
+ * ВАЖНО: зум зависит ТОЛЬКО от fingerExtension, не от ориентации кисти
  */
 function calculateZoom(fingerExtension: FingerExtension, currentZoom: number): number {
   // Вычисляем среднее раскрытие всех пальцев (кроме большого)
+  // Используем только fingerExtension, игнорируя ориентацию кисти
   const avgExtension = (
     fingerExtension.index +
     fingerExtension.middle +
@@ -83,7 +85,7 @@ function calculateFingerRotation(
   const rotationX = deltaY * ROTATION_SENSITIVITY * 180;
 
   // Ограничиваем скорость вращения и применяем плавность
-  const maxRotation = 2.0; // градусов за кадр (уменьшено для плавности)
+  const maxRotation = 5.0; // градусов за кадр (увеличено для лучшей реакции)
   return {
     rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)) * ROTATION_SMOOTHING,
     rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)) * ROTATION_SMOOTHING,
@@ -93,6 +95,7 @@ function calculateFingerRotation(
 /**
  * Вычисляет вращение на основе движения всей ладони (запястья)
  * Более быстрое вращение, чем движение пальцем
+ * ВАЖНО: это вращение НЕ влияет на зум
  */
 function calculateHandMovementRotation(
   currentWrist: Point3D,
@@ -111,7 +114,7 @@ function calculateHandMovementRotation(
   const rotationX = deltaY * HAND_MOVEMENT_SENSITIVITY * 180;
 
   // Ограничиваем скорость вращения и применяем плавность
-  const maxRotation = 4.0; // градусов за кадр (быстрее, чем движение пальцем)
+  const maxRotation = 8.0; // градусов за кадр (увеличено для лучшей реакции)
   return {
     rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)) * HAND_MOVEMENT_SMOOTHING,
     rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)) * HAND_MOVEMENT_SMOOTHING,
@@ -120,6 +123,7 @@ function calculateHandMovementRotation(
 
 /**
  * Вычисляет вращение на основе ориентации ладони
+ * ВАЖНО: это вращение НЕ влияет на зум, только на вращение планеты
  */
 function calculateHandRotation(
   currentOrientation: HandOrientation,
@@ -148,6 +152,7 @@ function calculateHandRotation(
   // heading -> rotationY (вращение вокруг вертикальной оси)
   // roll -> rotationZ (вращение вокруг оси Z)
   // pitch -> rotationX (вращение вокруг оси X)
+  // ВАЖНО: это НЕ влияет на зум, только на вращение
   return {
     rotationX: applyDeadZone(deltaPitch * HAND_ROTATION_SENSITIVITY) * HAND_ROTATION_SMOOTHING,
     rotationY: applyDeadZone(deltaHeading * HAND_ROTATION_SENSITIVITY) * HAND_ROTATION_SMOOTHING,
