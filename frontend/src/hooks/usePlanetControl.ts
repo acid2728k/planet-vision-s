@@ -112,9 +112,49 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       const now = Date.now();
       let planetSwitched = false;
       
-      // ЖЕСТ 1: Pinch (схлопывание большого и указательного пальцев) + движение влево/вправо
+      // ЖЕСТ 0: Простое соединение указательного и большого пальца (PINCH)
       const pinchStrength = handData.pinch.strength;
-      const isPinching = pinchStrength > 0.7; // Сильный pinch
+      const previousPinchStrength = previousPinchStrengthRef.current;
+      const isPinching = pinchStrength > PINCH_THRESHOLD;
+      const wasPinching = previousPinchStrength > PINCH_THRESHOLD;
+      const pinchJustStarted = isPinching && !wasPinching; // Переход от не-pinch к pinch
+      
+      if (pinchJustStarted && !planetSwitched) {
+        const timeSinceLastPinchSwitch = now - lastPinchSwitchTimeRef.current;
+        if (timeSinceLastPinchSwitch > PINCH_SWITCH_COOLDOWN) {
+          lastPinchSwitchTimeRef.current = now;
+          
+          // Определяем направление по движению руки в момент pinch
+          let switchDirection: 'next' | 'previous' = 'next';
+          if (previousWristRef.current) {
+            const deltaX = wrist.x - previousWristRef.current.x;
+            // Если рука движется влево в момент pinch - предыдущая планета, иначе следующая
+            switchDirection = deltaX < -0.01 ? 'previous' : 'next';
+          }
+          
+          console.log('✅ Planet switch (SIMPLE PINCH):', {
+            pinchStrength,
+            switchDirection,
+            from: currentPlanet,
+          });
+          
+          if (switchDirection === 'next') {
+            currentPlanet = getNextPlanet(currentPlanet);
+            newState.currentPlanet = currentPlanet;
+            console.log('👆 Next planet:', currentPlanet);
+          } else {
+            currentPlanet = getPreviousPlanet(currentPlanet);
+            newState.currentPlanet = currentPlanet;
+            console.log('👈 Previous planet:', currentPlanet);
+          }
+          planetSwitched = true;
+        }
+      }
+      
+      // Сохраняем текущую силу pinch для следующего кадра
+      previousPinchStrengthRef.current = pinchStrength;
+      
+      // ЖЕСТ 1: Pinch (схлопывание большого и указательного пальцев) + движение влево/вправо
       const hasSwipe = output.swipe.direction !== 'none';
       const hasVelocity = output.swipe.velocity > 0.005;
       
