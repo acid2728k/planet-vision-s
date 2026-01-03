@@ -198,6 +198,7 @@ function calculateHandRotation(
 
 /**
  * Детектирует swipe жесты для переключения планет
+ * Улучшенная версия с более чувствительным обнаружением
  */
 function detectSwipe(
   currentWrist: Point3D,
@@ -210,16 +211,23 @@ function detectSwipe(
   }
 
   const deltaTime = (timestamp - previousTimestamp) / 1000; // в секундах
-  if (deltaTime <= 0) {
+  if (deltaTime <= 0 || deltaTime > 0.5) {
+    // Игнорируем слишком большие интервалы (возможно, рука исчезла)
     return { direction: 'none', velocity: 0 };
   }
 
   // Вычисляем горизонтальное движение (по оси X)
   const deltaX = currentWrist.x - previousWrist.x;
-  const velocity = Math.abs(deltaX / deltaTime);
+  const absDeltaX = Math.abs(deltaX);
+  
+  // Вычисляем скорость
+  const velocity = absDeltaX / deltaTime;
 
-  // Проверяем, превышает ли скорость порог
-  if (velocity < SWIPE_THRESHOLD) {
+  // Проверяем минимальное расстояние движения (чтобы избежать ложных срабатываний от дрожания)
+  const MIN_DISTANCE = 0.02; // Минимальное горизонтальное движение
+  
+  // Проверяем, превышает ли скорость порог И движение достаточно большое
+  if (velocity < SWIPE_THRESHOLD || absDeltaX < MIN_DISTANCE) {
     return { direction: 'none', velocity: 0 };
   }
 
