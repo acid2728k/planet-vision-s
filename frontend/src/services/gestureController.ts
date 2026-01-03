@@ -11,6 +11,8 @@ const LANDMARKS = {
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
 const ZOOM_SMOOTHING = 0.04; // Плавность зума
+const HAND_DISTANCE_ZOOM_SMOOTHING = 0.02; // Более плавный зум при приближении зажатой кисти
+const HAND_DISTANCE_ZOOM_SENSITIVITY = 0.3; // Чувствительность зума от расстояния
 const ROTATION_SENSITIVITY = 3.0; // Множитель для вращения пальцем (увеличено)
 const ROTATION_SMOOTHING = 0.1; // Плавность вращения пальцем (увеличено)
 const HAND_MOVEMENT_SENSITIVITY = 4.0; // Множитель для вращения движением ладони (увеличено)
@@ -43,8 +45,15 @@ export interface GestureControlOutput {
  * Раскрытая ладонь (OPEN) -> zoom out (уменьшение)
  * Схлопнутые пальцы (CLOSED) -> zoom in (увеличение)
  * ВАЖНО: зум зависит ТОЛЬКО от fingerExtension, не от ориентации кисти
+ * 
+ * Дополнительно: при приближении зажатой кисти (уменьшение Z) добавляется плавный зум
  */
-function calculateZoom(fingerExtension: FingerExtension, currentZoom: number): number {
+function calculateZoom(
+  fingerExtension: FingerExtension, 
+  currentZoom: number,
+  currentWrist?: Point3D,
+  previousWrist?: Point3D
+): number {
   // Вычисляем среднее раскрытие всех пальцев (кроме большого)
   // Используем только fingerExtension, игнорируя ориентацию кисти
   const avgExtension = (
@@ -57,11 +66,35 @@ function calculateZoom(fingerExtension: FingerExtension, currentZoom: number): n
   // Маппинг: раскрытая ладонь (1.0) -> zoom out (0.5x)
   //           схлопнутые пальцы (0.0) -> zoom in (2.0x)
   // Инвертируем: чем больше раскрытие, тем меньше zoom
-  const targetZoom = ZOOM_MIN + (ZOOM_MAX - ZOOM_MIN) * (1 - avgExtension);
+  let targetZoom = ZOOM_MIN + (ZOOM_MAX - ZOOM_MIN) * (1 - avgExtension);
+  
+  // Дополнительный плавный зум при приближении зажатой кисти
+  // Работает только когда пальцы схлопнуты (avgExtension < 0.3)
+  if (avgExtension < 0.3 && currentWrist && previousWrist) {
+    // Вычисляем изменение глубины (Z координата)
+    // В MediaPipe: меньше Z = ближе к камере
+    const deltaZ = previousWrist.z - currentWrist.z; // Положительное = приближение
+    
+    if (deltaZ > 0) {
+      // Кисть приближается - добавляем дополнительный зум
+      // Чем больше приближение, тем больше зум
+      const distanceZoom = deltaZ * HAND_DISTANCE_ZOOM_SENSITIVITY;
+      targetZoom += distanceZoom;
+      
+      console.log('🔍 Distance zoom:', {
+        deltaZ,
+        distanceZoom,
+        avgExtension,
+        targetZoom,
+      });
+    }
+  }
+  
   const clampedZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, targetZoom));
   
-  // Плавная интерполяция
-  return currentZoom + (clampedZoom - currentZoom) * ZOOM_SMOOTHING;
+  // Плавная интерполяция (более плавная при приближении зажатой кисти)
+  const smoothing = avgExtension < 0.3 ? HAND_DISTANCE_ZOOM_SMOOTHING : ZOOM_SMOOTHING;
+  return currentZoom + (clampedZoom - currentZoom) * smoothing;
 }
 
 /**
