@@ -117,12 +117,17 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           });
           
           if (output.swipe.direction === 'right') {
-            newState.currentPlanet = getNextPlanet(prev.currentPlanet);
-            console.log('→ Next planet:', newState.currentPlanet);
+            const nextPlanet = getNextPlanet(prev.currentPlanet);
+            newState.currentPlanet = nextPlanet;
+            console.log('→ Next planet:', nextPlanet, 'from', prev.currentPlanet);
           } else if (output.swipe.direction === 'left') {
-            newState.currentPlanet = getPreviousPlanet(prev.currentPlanet);
-            console.log('← Previous planet:', newState.currentPlanet);
+            const prevPlanet = getPreviousPlanet(prev.currentPlanet);
+            newState.currentPlanet = prevPlanet;
+            console.log('← Previous planet:', prevPlanet, 'from', prev.currentPlanet);
           }
+          
+          // Логируем финальное состояние для отладки
+          console.log('📊 New controlState.currentPlanet:', newState.currentPlanet);
         }
       }
 

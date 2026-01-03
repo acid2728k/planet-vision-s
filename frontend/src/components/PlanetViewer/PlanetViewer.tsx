@@ -23,6 +23,11 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
   useEffect(() => {
     const newPlanet = PLANETS[controlState.currentPlanet];
     if (newPlanet.type !== previousPlanetRef.current.type) {
+      console.log('🪐 Planet changed in PlanetViewer:', {
+        from: previousPlanetRef.current.name,
+        to: newPlanet.name,
+        type: newPlanet.type,
+      });
       setCurrentPlanetData(newPlanet);
       previousPlanetRef.current = newPlanet;
       onPlanetChange?.(newPlanet);

@@ -24,11 +24,23 @@ function App() {
     landmarks,
   });
 
+  // Исправляем бесконечный цикл: обновляем только если история действительно изменилась
   useEffect(() => {
     if (handData?.pinch.history) {
-      setPinchHistory(handData.pinch.history);
+      // Проверяем, изменилась ли история (сравниваем длину и последнее значение)
+      const newHistory = handData.pinch.history;
+      const currentHistory = pinchHistory;
+      
+      // Обновляем только если история действительно изменилась
+      if (
+        newHistory.length !== currentHistory.length ||
+        (newHistory.length > 0 && currentHistory.length > 0 &&
+         newHistory[newHistory.length - 1] !== currentHistory[currentHistory.length - 1])
+      ) {
+        setPinchHistory(newHistory);
+      }
     }
-  }, [handData]);
+  }, [handData?.pinch.history]); // Зависимость только от истории, а не от всего handData
 
   // Debug: проверка загрузки
   useEffect(() => {
