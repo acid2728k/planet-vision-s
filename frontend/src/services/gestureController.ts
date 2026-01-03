@@ -96,10 +96,12 @@ function calculateFingerRotation(
  * Вычисляет вращение на основе движения всей ладони (запястья)
  * Более быстрое вращение, чем движение пальцем
  * ВАЖНО: это вращение НЕ влияет на зум
+ * Во время зум-ина (схлопнутые пальцы) чувствительность увеличивается
  */
 function calculateHandMovementRotation(
   currentWrist: Point3D,
-  previousWrist: Point3D | undefined
+  previousWrist: Point3D | undefined,
+  fingerExtension?: FingerExtension
 ): { rotationX: number; rotationY: number } {
   if (!previousWrist) {
     return { rotationX: 0, rotationY: 0 };
@@ -109,12 +111,28 @@ function calculateHandMovementRotation(
   const deltaX = currentWrist.x - previousWrist.x;
   const deltaY = currentWrist.y - previousWrist.y;
 
+  // Увеличиваем чувствительность во время зум-ина (схлопнутые пальцы)
+  let sensitivityMultiplier = 1.0;
+  if (fingerExtension) {
+    const avgExtension = (
+      fingerExtension.index +
+      fingerExtension.middle +
+      fingerExtension.ring +
+      fingerExtension.pinky
+    ) / 4;
+    // Если пальцы схлопнуты (avgExtension < 0.3), увеличиваем чувствительность
+    if (avgExtension < 0.3) {
+      // Чем больше схлопнуты пальцы, тем больше чувствительность (до 2.5x)
+      sensitivityMultiplier = 1.0 + (0.3 - avgExtension) * 5.0; // 0.3 -> 1.0, 0.0 -> 2.5
+    }
+  }
+
   // Преобразуем в углы вращения (более быстрое, чем движение пальцем)
-  const rotationY = -deltaX * HAND_MOVEMENT_SENSITIVITY * 180;
-  const rotationX = deltaY * HAND_MOVEMENT_SENSITIVITY * 180;
+  const rotationY = -deltaX * HAND_MOVEMENT_SENSITIVITY * sensitivityMultiplier * 180;
+  const rotationX = deltaY * HAND_MOVEMENT_SENSITIVITY * sensitivityMultiplier * 180;
 
   // Ограничиваем скорость вращения и применяем плавность
-  const maxRotation = 8.0; // градусов за кадр (увеличено для лучшей реакции)
+  const maxRotation = 8.0 * sensitivityMultiplier; // градусов за кадр (увеличено для лучшей реакции)
   return {
     rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)) * HAND_MOVEMENT_SMOOTHING,
     rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)) * HAND_MOVEMENT_SMOOTHING,
@@ -124,10 +142,12 @@ function calculateHandMovementRotation(
 /**
  * Вычисляет вращение на основе ориентации ладони
  * ВАЖНО: это вращение НЕ влияет на зум, только на вращение планеты
+ * Во время зум-ина (схлопнутые пальцы) чувствительность увеличивается
  */
 function calculateHandRotation(
   currentOrientation: HandOrientation,
-  previousOrientation: HandOrientation | undefined
+  previousOrientation: HandOrientation | undefined,
+  fingerExtension?: FingerExtension
 ): { rotationX: number; rotationY: number; rotationZ: number } {
   if (!previousOrientation) {
     return { rotationX: 0, rotationY: 0, rotationZ: 0 };
@@ -148,15 +168,31 @@ function calculateHandRotation(
     return value;
   };
 
+  // Увеличиваем чувствительность во время зум-ина (схлопнутые пальцы)
+  let sensitivityMultiplier = 1.0;
+  if (fingerExtension) {
+    const avgExtension = (
+      fingerExtension.index +
+      fingerExtension.middle +
+      fingerExtension.ring +
+      fingerExtension.pinky
+    ) / 4;
+    // Если пальцы схлопнуты (avgExtension < 0.3), увеличиваем чувствительность
+    if (avgExtension < 0.3) {
+      // Чем больше схлопнуты пальцы, тем больше чувствительность (до 3x)
+      sensitivityMultiplier = 1.0 + (0.3 - avgExtension) * 6.67; // 0.3 -> 1.0, 0.0 -> 3.0
+    }
+  }
+
   // Маппинг изменений ориентации в вращение модели с плавностью
   // heading -> rotationY (вращение вокруг вертикальной оси)
   // roll -> rotationZ (вращение вокруг оси Z)
   // pitch -> rotationX (вращение вокруг оси X)
   // ВАЖНО: это НЕ влияет на зум, только на вращение
   return {
-    rotationX: applyDeadZone(deltaPitch * HAND_ROTATION_SENSITIVITY) * HAND_ROTATION_SMOOTHING,
-    rotationY: applyDeadZone(deltaHeading * HAND_ROTATION_SENSITIVITY) * HAND_ROTATION_SMOOTHING,
-    rotationZ: applyDeadZone(deltaRoll * HAND_ROTATION_SENSITIVITY * 0.5) * HAND_ROTATION_SMOOTHING,
+    rotationX: applyDeadZone(deltaPitch * HAND_ROTATION_SENSITIVITY * sensitivityMultiplier) * HAND_ROTATION_SMOOTHING,
+    rotationY: applyDeadZone(deltaHeading * HAND_ROTATION_SENSITIVITY * sensitivityMultiplier) * HAND_ROTATION_SMOOTHING,
+    rotationZ: applyDeadZone(deltaRoll * HAND_ROTATION_SENSITIVITY * sensitivityMultiplier * 0.5) * HAND_ROTATION_SMOOTHING,
   };
 }
 
@@ -211,10 +247,12 @@ export function processGestureControl(
   const fingerRotation = calculateFingerRotation(indexTip, input.previousIndexTip);
 
   // Вращение движением всей ладони (быстрое)
-  const handMovementRotation = calculateHandMovementRotation(wrist, input.previousWrist);
+  // Передаем fingerExtension для увеличения чувствительности во время зум-ина
+  const handMovementRotation = calculateHandMovementRotation(wrist, input.previousWrist, input.fingerExtension);
 
   // Вращение ориентацией кисти (тонкое)
-  const handOrientationRotation = calculateHandRotation(input.orientation, input.previousOrientation);
+  // Передаем fingerExtension для увеличения чувствительности во время зум-ина
+  const handOrientationRotation = calculateHandRotation(input.orientation, input.previousOrientation, input.fingerExtension);
 
   // Swipe для переключения планет
   const swipe = detectSwipe(wrist, input.previousWrist, timestamp, previousTimestamp);
