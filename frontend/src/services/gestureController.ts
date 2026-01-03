@@ -10,11 +10,11 @@ const LANDMARKS = {
 // Константы для управления
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
-const ZOOM_SMOOTHING = 0.08; // Плавность зума (меньше = плавнее)
-const ROTATION_SENSITIVITY = 1.2; // Множитель для вращения пальцем
-const ROTATION_SMOOTHING = 0.12; // Плавность вращения
-const HAND_ROTATION_SENSITIVITY = 0.25; // Множитель для вращения кистью
-const HAND_ROTATION_SMOOTHING = 0.1; // Плавность вращения кистью
+const ZOOM_SMOOTHING = 0.04; // Плавность зума (уменьшено для еще большей плавности)
+const ROTATION_SENSITIVITY = 1.0; // Множитель для вращения пальцем (уменьшено)
+const ROTATION_SMOOTHING = 0.06; // Плавность вращения (уменьшено для еще большей плавности)
+const HAND_ROTATION_SENSITIVITY = 0.2; // Множитель для вращения кистью (уменьшено)
+const HAND_ROTATION_SMOOTHING = 0.05; // Плавность вращения кистью (уменьшено для еще большей плавности)
 const SWIPE_THRESHOLD = 0.12; // Минимальная скорость для swipe
 const DEAD_ZONE = 1.5; // Минимальное изменение для вращения кистью (degrees)
 
