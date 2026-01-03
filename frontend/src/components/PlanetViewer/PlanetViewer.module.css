@@ -4,51 +4,47 @@
   width: 100%;
   height: 100%;
   background: #000000;
-  border: 1px solid #bb00ff;
-  border-radius: 4px;
   overflow: hidden;
   font-family: 'JetBrains Mono', monospace;
   color: #bb00ff;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: rgba(187, 0, 255, 0.1);
-  border-bottom: 1px solid #bb00ff;
-}
-
-.label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.planetName {
-  font-size: 14px;
-  font-weight: 700;
-  color: #aa66cc;
-  text-transform: uppercase;
+  position: relative;
 }
 
 .canvasContainer {
   flex: 1;
   position: relative;
   background: #000000;
-  min-height: 400px;
-}
-
-.footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background: rgba(187, 0, 255, 0.05);
-  border-top: 1px solid #bb00ff;
-  font-size: 11px;
-  color: #aa66cc;
+  justify-content: center;
+  min-height: 0;
 }
 
+.planetLabel {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.planetName {
+  font-weight: 700;
+  color: #bb00ff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(187, 0, 255, 0.5);
+  white-space: nowrap;
+}
+
+.navArrow {
+  font-size: 24px;
+  color: #aa66cc;
+  opacity: 0.6;
+  font-weight: 300;
+  text-shadow: 0 0 5px rgba(187, 0, 255, 0.3);
+}

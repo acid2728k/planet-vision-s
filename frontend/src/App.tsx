@@ -160,19 +160,7 @@ function App() {
             </div>
           ) : (
             <div className={styles.planetMode}>
-              <div className={styles.planetViewerContainer}>
-                <PlanetViewer controlState={controlState} />
-              </div>
-              <div className={styles.planetControls}>
-                <OpticalSensor
-                  videoRef={videoRef}
-                  landmarks={landmarks}
-                  fps={fps}
-                  handCount={handCount}
-                  isRecording={isRecording}
-                />
-                <DetectedGesture gesture={handData?.gesture || "NONE"} />
-              </div>
+              <PlanetViewer controlState={controlState} />
             </div>
           )}
         </>

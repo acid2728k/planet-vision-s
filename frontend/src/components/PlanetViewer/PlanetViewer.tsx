@@ -17,6 +17,8 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
     PLANETS[controlState.currentPlanet]
   );
   const previousPlanetRef = useRef<PlanetData>(currentPlanetData);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [planetNameSize, setPlanetNameSize] = useState(24); // Размер текста в пикселях
 
   // Обновляем текущую планету при изменении
   useEffect(() => {
@@ -28,13 +30,27 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
     }
   }, [controlState.currentPlanet, onPlanetChange]);
 
+  // Вычисляем размер текста как 2% от размера планеты
+  useEffect(() => {
+    const updateTextSize = () => {
+      if (canvasRef.current) {
+        const canvasHeight = canvasRef.current.clientHeight;
+        // Размер планеты примерно 60% от высоты canvas (визуально)
+        const planetSize = canvasHeight * 0.6;
+        // 2% от размера планеты
+        const textSize = planetSize * 0.02;
+        setPlanetNameSize(Math.max(16, Math.min(48, textSize))); // Ограничиваем от 16 до 48px
+      }
+    };
+
+    updateTextSize();
+    window.addEventListener('resize', updateTextSize);
+    return () => window.removeEventListener('resize', updateTextSize);
+  }, []);
+
   return (
     <div className={styles.planetViewer}>
-      <div className={styles.header}>
-        <span className={styles.label}>PLANET_VIEWER</span>
-        <span className={styles.planetName}>{currentPlanetData.name}</span>
-      </div>
-      <div className={styles.canvasContainer}>
+      <div className={styles.canvasContainer} ref={canvasRef}>
         <Canvas
           gl={{ antialias: true, alpha: true }}
           camera={{ position: [0, 0, 3], fov: 50 }}
@@ -51,17 +67,18 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
             rotationZ={controlState.rotationZ}
             zoom={controlState.zoom}
           />
-          {/* Отключаем стандартные OrbitControls, так как управление через жесты */}
         </Canvas>
       </div>
-      <div className={styles.footer}>
-        <span>ZOOM: {controlState.zoom.toFixed(2)}x</span>
-        <span>
-          PLANET {PLANET_ORDER.indexOf(controlState.currentPlanet) + 1} /{' '}
-          {PLANET_ORDER.length}
+      <div className={styles.planetLabel}>
+        <span className={styles.navArrow}>←</span>
+        <span 
+          className={styles.planetName}
+          style={{ fontSize: `${planetNameSize}px` }}
+        >
+          {currentPlanetData.name}
         </span>
+        <span className={styles.navArrow}>→</span>
       </div>
     </div>
   );
 }
-
