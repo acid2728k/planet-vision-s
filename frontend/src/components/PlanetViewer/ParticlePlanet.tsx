@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PlanetData } from '../../types';
@@ -76,8 +76,8 @@ export function ParticlePlanet({
   rotationZ,
   zoom,
 }: ParticlePlanetProps) {
-  const planetRef = useRef<THREE.Points>(null);
-  const ringRef = useRef<THREE.Points>(null);
+  const planetMeshRef = useRef<THREE.Mesh>(null);
+  const ringMeshRef = useRef<THREE.Mesh>(null);
 
   // Генерируем геометрию частиц для планеты
   const planetPositions = useMemo(() => {
@@ -101,21 +101,6 @@ export function ParticlePlanet({
     if (!planet.ringColor) return planetColor;
     return new THREE.Color(planet.ringColor);
   }, [planet.ringColor, planetColor]);
-
-  // Анимация вращения (применяем накопленные углы)
-  useFrame(() => {
-    if (planetRef.current) {
-      // Плавное применение вращения
-      planetRef.current.rotation.x = rotationX * 0.0174533; // конвертация в радианы
-      planetRef.current.rotation.y = rotationY * 0.0174533;
-      planetRef.current.rotation.z = rotationZ * 0.0174533;
-    }
-    if (ringRef.current) {
-      ringRef.current.rotation.x = rotationX * 0.0174533;
-      ringRef.current.rotation.y = rotationY * 0.0174533;
-      ringRef.current.rotation.z = rotationZ * 0.0174533;
-    }
-  });
 
   // Создаем материал для частиц
   const planetMaterial = useMemo(() => {
@@ -153,16 +138,53 @@ export function ParticlePlanet({
     return geometry;
   }, [ringPositions]);
 
-  return (
-    <group scale={zoom}>
-      {/* Планета */}
-      <points ref={planetRef} geometry={planetGeometry} material={planetMaterial} />
+  // Анимация вращения и масштабирования
+  useFrame(() => {
+    if (planetMeshRef.current) {
+      planetMeshRef.current.rotation.x = rotationX * 0.0174533;
+      planetMeshRef.current.rotation.y = rotationY * 0.0174533;
+      planetMeshRef.current.rotation.z = rotationZ * 0.0174533;
+      planetMeshRef.current.scale.set(zoom, zoom, zoom);
+    }
+    if (ringMeshRef.current) {
+      ringMeshRef.current.rotation.x = rotationX * 0.0174533;
+      ringMeshRef.current.rotation.y = rotationY * 0.0174533;
+      ringMeshRef.current.rotation.z = rotationZ * 0.0174533;
+      ringMeshRef.current.scale.set(zoom, zoom, zoom);
+    }
+  });
 
-      {/* Кольца (если есть) */}
-      {ringGeometry && ringMaterial && (
-        <points ref={ringRef} geometry={ringGeometry} material={ringMaterial} />
+  // Создаем объекты Points для рендеринга
+  const planetPoints = useMemo(() => {
+    return new THREE.Points(planetGeometry, planetMaterial);
+  }, [planetGeometry, planetMaterial]);
+
+  const ringPoints = useMemo(() => {
+    if (!ringGeometry || !ringMaterial) return null;
+    return new THREE.Points(ringGeometry, ringMaterial);
+  }, [ringGeometry, ringMaterial]);
+
+  // Обновляем refs для анимации
+  useEffect(() => {
+    if (planetPoints) {
+      (planetMeshRef as any).current = planetPoints;
+    }
+  }, [planetPoints]);
+
+  useEffect(() => {
+    if (ringPoints) {
+      (ringMeshRef as any).current = ringPoints;
+    }
+  }, [ringPoints]);
+
+  return (
+    <>
+      {/* @ts-expect-error - primitive is available in React Three Fiber */}
+      <primitive ref={planetMeshRef} object={planetPoints} />
+      {ringPoints && (
+        /* @ts-expect-error - primitive is available in React Three Fiber */
+        <primitive ref={ringMeshRef} object={ringPoints} />
       )}
-    </group>
+    </>
   );
 }
-

@@ -31,8 +31,8 @@ export const StatusBar = () => {
   return (
     <header className={styles.statusBar}>
       <div className={styles.left}>
-        <div className={styles.title}>VISION_OS v0.9.1</div>
-        <div className={styles.subtitle}>NEURAL INTERFACE TERMINAL // MEDIAPIPE</div>
+        <div className={styles.title}>Planet Vision S v0.1</div>
+        <div className={styles.subtitle}>INTERACTIVE 3D PLANET CONTROL // GESTURE RECOGNITION</div>
       </div>
       <div className={styles.right}>
         <div className={styles.liveIndicator}>

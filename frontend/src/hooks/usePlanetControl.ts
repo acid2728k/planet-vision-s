@@ -27,10 +27,10 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const [controlState, setControlState] = useState<PlanetControlState>(INITIAL_STATE);
   
   // Храним предыдущие значения для вычисления дельт
-  const previousIndexTipRef = useRef<{ x: number; y: number; z: number } | undefined>();
-  const previousOrientationRef = useRef<{ heading: number; pitch: number; roll: number } | undefined>();
-  const previousWristRef = useRef<{ x: number; y: number; z: number } | undefined>();
-  const previousTimestampRef = useRef<number | undefined>();
+  const previousIndexTipRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
+  const previousOrientationRef = useRef<{ heading: number; pitch: number; roll: number } | undefined>(undefined);
+  const previousWristRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
+  const previousTimestampRef = useRef<number | undefined>(undefined);
   const lastSwipeTimeRef = useRef<number>(0);
   const SWIPE_COOLDOWN = 500; // Минимальное время между swipe (мс)
 

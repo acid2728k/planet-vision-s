@@ -21,7 +21,7 @@ function App() {
     useMediaPipe();
   const [isRecording] = useState(true);
   const [pinchHistory, setPinchHistory] = useState<number[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>("analysis");
+  const [viewMode, setViewMode] = useState<ViewMode>("analysis"); // Временно только analysis mode
 
   const { handData, heatmapData } = useHandTracking(landmarks, pinchHistory);
   

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
+import * as THREE from 'three';
 import { ParticlePlanet } from './ParticlePlanet';
 import { PlanetData, PlanetControlState } from '../../types';
 import { PLANETS, PLANET_ORDER } from '../../data/planets';
@@ -39,7 +40,9 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
           camera={{ position: [0, 0, 3], fov: 50 }}
         >
           <PerspectiveCamera makeDefault position={[0, 0, 3]} fov={50} />
+          {/* @ts-expect-error - ambientLight is available in React Three Fiber */}
           <ambientLight intensity={0.5} />
+          {/* @ts-expect-error - pointLight is available in React Three Fiber */}
           <pointLight position={[10, 10, 10]} intensity={1} />
           <ParticlePlanet
             planet={currentPlanetData}
