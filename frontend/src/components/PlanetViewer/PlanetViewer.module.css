@@ -29,7 +29,6 @@
   align-items: center;
   gap: 20px;
   z-index: 10;
-  pointer-events: none;
 }
 
 .planetName {
@@ -47,4 +46,22 @@
   opacity: 0.6;
   font-weight: 300;
   text-shadow: 0 0 5px rgba(187, 0, 255, 0.3);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.navArrow:hover {
+  opacity: 1;
+  color: #bb00ff;
+  text-shadow: 0 0 10px rgba(187, 0, 255, 0.6);
+  background: rgba(187, 0, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.navArrow:active {
+  transform: scale(0.95);
+  opacity: 0.8;
 }

@@ -19,7 +19,7 @@ function App() {
   const { handData } = useHandTracking(landmarks, pinchHistory);
   
   // Управление планетой через жесты
-  const { controlState } = usePlanetControl({
+  const { controlState, setPlanet } = usePlanetControl({
     handData,
     landmarks,
   });
@@ -100,7 +100,8 @@ function App() {
           <div className={styles.planetMode}>
             <PlanetViewer 
               key={controlState.currentPlanet} 
-              controlState={controlState} 
+              controlState={controlState}
+              setPlanet={setPlanet}
             />
           </div>
         </>

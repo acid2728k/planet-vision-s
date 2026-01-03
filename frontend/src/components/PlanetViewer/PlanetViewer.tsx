@@ -2,16 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { ParticlePlanet } from './ParticlePlanet';
-import { PlanetData, PlanetControlState } from '../../types';
-import { PLANETS } from '../../data/planets';
+import { PlanetData, PlanetControlState, PlanetType } from '../../types';
+import { PLANETS, getNextPlanet, getPreviousPlanet } from '../../data/planets';
 import styles from './PlanetViewer.module.css';
 
 interface PlanetViewerProps {
   controlState: PlanetControlState;
+  setPlanet: (planet: PlanetType) => void;
   onPlanetChange?: (planet: PlanetData) => void;
 }
 
-export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps) {
+export function PlanetViewer({ controlState, setPlanet, onPlanetChange }: PlanetViewerProps) {
   // Упрощаем: используем напрямую из controlState, без локального состояния
   const currentPlanetData = PLANETS[controlState.currentPlanet];
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -22,6 +23,19 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
     console.log('🪐 PlanetViewer: Current planet is', controlState.currentPlanet, currentPlanetData.name);
     onPlanetChange?.(currentPlanetData);
   }, [controlState.currentPlanet]);
+
+  // Обработчики для переключения планет по клику на стрелки
+  const handlePreviousPlanet = () => {
+    const previousPlanet = getPreviousPlanet(controlState.currentPlanet);
+    console.log('🖱️ Click: Previous planet', previousPlanet);
+    setPlanet(previousPlanet);
+  };
+
+  const handleNextPlanet = () => {
+    const nextPlanet = getNextPlanet(controlState.currentPlanet);
+    console.log('🖱️ Click: Next planet', nextPlanet);
+    setPlanet(nextPlanet);
+  };
 
   // Вычисляем размер текста как 2% от размера планеты
   useEffect(() => {
@@ -61,14 +75,26 @@ export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps
         </Canvas>
       </div>
       <div className={styles.planetLabel}>
-        <span className={styles.navArrow}>←</span>
+        <span 
+          className={styles.navArrow}
+          onClick={handlePreviousPlanet}
+          title="Предыдущая планета"
+        >
+          ←
+        </span>
         <span 
           className={styles.planetName}
           style={{ fontSize: `${planetNameSize}px` }}
         >
           {currentPlanetData.name}
         </span>
-        <span className={styles.navArrow}>→</span>
+        <span 
+          className={styles.navArrow}
+          onClick={handleNextPlanet}
+          title="Следующая планета"
+        >
+          →
+        </span>
       </div>
     </div>
   );
