@@ -32,17 +32,26 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const previousWristRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
   const previousTimestampRef = useRef<number | undefined>(undefined);
   const lastSwipeTimeRef = useRef<number>(0);
-  const SWIPE_COOLDOWN = 500; // Минимальное время между swipe (мс)
+  const isProcessingRef = useRef<boolean>(false); // Флаг для предотвращения параллельной обработки
+  const SWIPE_COOLDOWN = 300; // Минимальное время между swipe (мс) - уменьшено с 500
 
   useEffect(() => {
+    // Предотвращаем параллельную обработку
+    if (isProcessingRef.current) {
+      return;
+    }
+
     if (!handData || landmarks.length === 0) {
       // Нет руки - сбрасываем предыдущие значения
       previousIndexTipRef.current = undefined;
       previousOrientationRef.current = undefined;
       previousWristRef.current = undefined;
       previousTimestampRef.current = undefined;
+      isProcessingRef.current = false;
       return;
     }
+
+    isProcessingRef.current = true;
 
     const currentTimestamp = Date.now();
     const mainHandLandmarks = landmarks[0];
@@ -91,18 +100,6 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         handData.fingerExtension.pinky
       ) / 4;
       
-      // Логируем все swipe события для отладки
-      if (output.swipe.direction !== 'none') {
-        console.log('Swipe event:', {
-          direction: output.swipe.direction,
-          velocity: output.swipe.velocity,
-          avgExtension,
-          meetsVelocity: output.swipe.velocity > 0.02,
-          meetsExtension: avgExtension > 0.3,
-          currentPlanet: prev.currentPlanet,
-        });
-      }
-      
       // Упростили условия: снизили пороги для лучшей отзывчивости
       if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.02 && avgExtension > 0.3) {
         const now = Date.now();
@@ -126,11 +123,6 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
             newState.currentPlanet = getPreviousPlanet(prev.currentPlanet);
             console.log('← Previous planet:', newState.currentPlanet);
           }
-        } else {
-          console.log('⏳ Swipe cooldown active:', {
-            timeSinceLastSwipe,
-            cooldown: SWIPE_COOLDOWN,
-          });
         }
       }
 
@@ -143,6 +135,11 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       };
       previousWristRef.current = wrist;
       previousTimestampRef.current = currentTimestamp;
+
+      // Сбрасываем флаг обработки после завершения
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 0);
 
       return newState;
     });
