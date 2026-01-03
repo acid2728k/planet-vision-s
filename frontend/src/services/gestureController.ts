@@ -11,10 +11,12 @@ const LANDMARKS = {
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
 const ZOOM_SMOOTHING = 0.04; // Плавность зума (уменьшено для еще большей плавности)
-const ROTATION_SENSITIVITY = 1.0; // Множитель для вращения пальцем (уменьшено)
-const ROTATION_SMOOTHING = 0.06; // Плавность вращения (уменьшено для еще большей плавности)
-const HAND_ROTATION_SENSITIVITY = 0.2; // Множитель для вращения кистью (уменьшено)
-const HAND_ROTATION_SMOOTHING = 0.05; // Плавность вращения кистью (уменьшено для еще большей плавности)
+const ROTATION_SENSITIVITY = 1.0; // Множитель для вращения пальцем
+const ROTATION_SMOOTHING = 0.06; // Плавность вращения пальцем
+const HAND_MOVEMENT_SENSITIVITY = 2.5; // Множитель для вращения движением ладони (быстрее)
+const HAND_MOVEMENT_SMOOTHING = 0.08; // Плавность вращения движением ладони
+const HAND_ROTATION_SENSITIVITY = 0.2; // Множитель для вращения ориентацией кисти
+const HAND_ROTATION_SMOOTHING = 0.05; // Плавность вращения ориентацией кисти
 const SWIPE_THRESHOLD = 0.12; // Минимальная скорость для swipe
 const DEAD_ZONE = 1.5; // Минимальное изменение для вращения кистью (degrees)
 
@@ -85,6 +87,34 @@ function calculateFingerRotation(
   return {
     rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)) * ROTATION_SMOOTHING,
     rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)) * ROTATION_SMOOTHING,
+  };
+}
+
+/**
+ * Вычисляет вращение на основе движения всей ладони (запястья)
+ * Более быстрое вращение, чем движение пальцем
+ */
+function calculateHandMovementRotation(
+  currentWrist: Point3D,
+  previousWrist: Point3D | undefined
+): { rotationX: number; rotationY: number } {
+  if (!previousWrist) {
+    return { rotationX: 0, rotationY: 0 };
+  }
+
+  // Вычисляем дельту движения запястья
+  const deltaX = currentWrist.x - previousWrist.x;
+  const deltaY = currentWrist.y - previousWrist.y;
+
+  // Преобразуем в углы вращения (более быстрое, чем движение пальцем)
+  const rotationY = -deltaX * HAND_MOVEMENT_SENSITIVITY * 180;
+  const rotationX = deltaY * HAND_MOVEMENT_SENSITIVITY * 180;
+
+  // Ограничиваем скорость вращения и применяем плавность
+  const maxRotation = 4.0; // градусов за кадр (быстрее, чем движение пальцем)
+  return {
+    rotationX: Math.max(-maxRotation, Math.min(maxRotation, rotationX)) * HAND_MOVEMENT_SMOOTHING,
+    rotationY: Math.max(-maxRotation, Math.min(maxRotation, rotationY)) * HAND_MOVEMENT_SMOOTHING,
   };
 }
 
@@ -172,21 +202,25 @@ export function processGestureControl(
   // Zoom через раскрытие/схлопывание ладони
   const zoom = calculateZoom(input.fingerExtension, currentState.zoom);
 
-  // Вращение пальцем
+  // Вращение указательным пальцем (точное, медленное)
   const fingerRotation = calculateFingerRotation(indexTip, input.previousIndexTip);
 
-  // Вращение кистью
-  const handRotation = calculateHandRotation(input.orientation, input.previousOrientation);
+  // Вращение движением всей ладони (быстрое)
+  const handMovementRotation = calculateHandMovementRotation(wrist, input.previousWrist);
+
+  // Вращение ориентацией кисти (тонкое)
+  const handOrientationRotation = calculateHandRotation(input.orientation, input.previousOrientation);
 
   // Swipe для переключения планет
   const swipe = detectSwipe(wrist, input.previousWrist, timestamp, previousTimestamp);
 
-  // Комбинируем вращения (палец + кисть)
+  // Комбинируем все типы вращений
+  // Движение ладони дает более быстрое вращение, палец - точное
   return {
     zoom,
-    rotationX: fingerRotation.rotationX + handRotation.rotationX,
-    rotationY: fingerRotation.rotationY + handRotation.rotationY,
-    rotationZ: handRotation.rotationZ,
+    rotationX: fingerRotation.rotationX + handMovementRotation.rotationX + handOrientationRotation.rotationX,
+    rotationY: fingerRotation.rotationY + handMovementRotation.rotationY + handOrientationRotation.rotationY,
+    rotationZ: handOrientationRotation.rotationZ,
     swipe,
   };
 }
