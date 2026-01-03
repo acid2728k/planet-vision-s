@@ -59,7 +59,7 @@ export type PlanetType =
   | "TELESTO"
   | "PHOEBE";
 
-export type MoonShape = "sphere" | "irregular" | "ellipsoid";
+export type MoonShape = "sphere" | "irregular" | "ellipsoid" | "model";
 
 export interface PlanetData {
   name: string;
@@ -70,6 +70,7 @@ export interface PlanetData {
   hasRings: boolean;
   ringColor?: string;
   shape?: MoonShape; // Форма спутника (для не-сферических)
+  modelPath?: string; // Путь к 3D модели (GLB файл)
   shapeParams?: {
     // Параметры для неправильных форм
     irregularity?: number; // 0-1, степень неправильности
