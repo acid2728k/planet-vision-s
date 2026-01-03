@@ -27,7 +27,8 @@ function generateParticlesFromModel(
   scene: THREE.Object3D,
   particleCount: number,
   targetRadius: number,
-  mirrorX: boolean = false // Отзеркаливание по оси X
+  mirrorX: boolean = false, // Отзеркаливание по оси X
+  mirrorZ: boolean = false // Инверсия по оси Z (вертикальная)
 ): { positions: Float32Array; sizes: Float32Array } {
   const positions = new Float32Array(particleCount * 3);
   const sizes = new Float32Array(particleCount);
@@ -134,6 +135,11 @@ function generateParticlesFromModel(
       scaled.x = -scaled.x;
     }
     
+    // Применяем инверсию по оси Z (вертикальная инверсия), если нужно
+    if (mirrorZ) {
+      scaled.z = -scaled.z;
+    }
+    
     return scaled;
   });
 
@@ -174,9 +180,9 @@ function MoonParticlesMesh({ planet, rotationX, rotationY, rotationZ, zoom }: Mo
   const particleData = useMemo(() => {
     console.log('🔄 MoonParticlesMesh: Generating particles from model for', planet.type);
     const clonedScene = scene.clone();
-    // Отзеркаливаем Telesto по оси X
-    const mirrorX = planet.type === 'TELESTO';
-    return generateParticlesFromModel(clonedScene, planet.particleCount, planet.radius, mirrorX);
+    // Инвертируем Telesto по оси Z (вертикальная инверсия), чтобы отличалась от Epimetheus
+    const mirrorZ = planet.type === 'TELESTO';
+    return generateParticlesFromModel(clonedScene, planet.particleCount, planet.radius, false, mirrorZ);
   }, [scene, planet.particleCount, planet.radius, planet.type]);
 
   // Преобразуем цвет из hex в THREE.Color
