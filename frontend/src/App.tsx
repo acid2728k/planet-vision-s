@@ -69,7 +69,7 @@ function App() {
       )}
       {/* Видео элемент всегда рендерится для MediaPipe, но скрыт */}
       <video
-        ref={videoRef}
+        ref={videoRef as any}
         style={{
           position: "absolute",
           top: 0,
