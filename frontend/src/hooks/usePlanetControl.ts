@@ -32,26 +32,17 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const previousWristRef = useRef<{ x: number; y: number; z: number } | undefined>(undefined);
   const previousTimestampRef = useRef<number | undefined>(undefined);
   const lastSwipeTimeRef = useRef<number>(0);
-  const isProcessingRef = useRef<boolean>(false); // Флаг для предотвращения параллельной обработки
   const SWIPE_COOLDOWN = 300; // Минимальное время между swipe (мс) - уменьшено с 500
 
   useEffect(() => {
-    // Предотвращаем параллельную обработку
-    if (isProcessingRef.current) {
-      return;
-    }
-
     if (!handData || landmarks.length === 0) {
       // Нет руки - сбрасываем предыдущие значения
       previousIndexTipRef.current = undefined;
       previousOrientationRef.current = undefined;
       previousWristRef.current = undefined;
       previousTimestampRef.current = undefined;
-      isProcessingRef.current = false;
       return;
     }
-
-    isProcessingRef.current = true;
 
     const currentTimestamp = Date.now();
     const mainHandLandmarks = landmarks[0];
@@ -156,11 +147,6 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       });
 
       return newState;
-    });
-
-    // Сбрасываем флаг обработки после завершения через requestAnimationFrame
-    requestAnimationFrame(() => {
-      isProcessingRef.current = false;
     });
   }, [handData, landmarks]);
 
