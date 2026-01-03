@@ -17,7 +17,7 @@ const HAND_MOVEMENT_SENSITIVITY = 4.0; // Множитель для вращен
 const HAND_MOVEMENT_SMOOTHING = 0.12; // Плавность вращения движением ладони (увеличено)
 const HAND_ROTATION_SENSITIVITY = 0.5; // Множитель для вращения ориентацией кисти (увеличено)
 const HAND_ROTATION_SMOOTHING = 0.08; // Плавность вращения ориентацией кисти (увеличено)
-const SWIPE_THRESHOLD = 0.12; // Минимальная скорость для swipe
+const SWIPE_THRESHOLD = 0.05; // Минимальная скорость для swipe (уменьшено для лучшей чувствительности)
 const DEAD_ZONE = 0.5; // Минимальное изменение для вращения кистью (degrees) (уменьшено)
 
 export interface GestureControlInput {

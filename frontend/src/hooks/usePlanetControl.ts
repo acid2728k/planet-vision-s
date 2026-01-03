@@ -83,7 +83,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       };
 
       // Обрабатываем swipe для переключения спутников
-      // Переключение работает ТОЛЬКО при разжатой кисти (avgExtension > 0.5)
+      // Переключение работает ТОЛЬКО при разжатой кисти (avgExtension > 0.4)
       const avgExtension = (
         handData.fingerExtension.index +
         handData.fingerExtension.middle +
@@ -91,10 +91,18 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         handData.fingerExtension.pinky
       ) / 4;
       
-      if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.15 && avgExtension > 0.5) {
+      // Уменьшили порог скорости и расширили условие для разжатой кисти
+      if (output.swipe.direction !== 'none' && output.swipe.velocity > 0.05 && avgExtension > 0.4) {
         const now = Date.now();
         if (now - lastSwipeTimeRef.current > SWIPE_COOLDOWN) {
           lastSwipeTimeRef.current = now;
+          
+          console.log('Swipe detected:', {
+            direction: output.swipe.direction,
+            velocity: output.swipe.velocity,
+            avgExtension,
+            currentPlanet: prev.currentPlanet,
+          });
           
           if (output.swipe.direction === 'right') {
             newState.currentPlanet = getNextPlanet(prev.currentPlanet);
