@@ -226,7 +226,9 @@ export function ParticlePlanet({
   const ringGroupRef = useRef<THREE.Group>(null);
 
   // Генерируем геометрию частиц для планеты/спутника с учетом формы
+  // ВАЖНО: включаем planet.type в зависимости, чтобы геометрия пересоздавалась при смене планеты
   const planetData = useMemo(() => {
+    console.log('🔄 ParticlePlanet: Regenerating geometry for planet:', planet.type, planet.name);
     const shape = planet.shape || 'sphere';
     const shapeParams = planet.shapeParams || {};
 
@@ -248,7 +250,7 @@ export function ParticlePlanet({
       default:
         return generateSphereParticles(planet.particleCount, planet.radius);
     }
-  }, [planet.particleCount, planet.radius, planet.shape, planet.shapeParams]);
+  }, [planet.type, planet.particleCount, planet.radius, planet.shape, planet.shapeParams]);
 
   // Генерируем геометрию частиц для колец (если есть)
   const ringData = useMemo(() => {
@@ -259,9 +261,11 @@ export function ParticlePlanet({
   }, [planet.hasRings, planet.particleCount, planet.radius]);
 
   // Преобразуем цвет из hex в THREE.Color
+  // ВАЖНО: включаем planet.type чтобы цвет обновлялся при смене планеты
   const planetColor = useMemo(() => {
+    console.log('🎨 ParticlePlanet: Updating color for planet:', planet.type, planet.color);
     return new THREE.Color(planet.color);
-  }, [planet.color]);
+  }, [planet.type, planet.color]);
 
   const ringColor = useMemo(() => {
     if (!planet.ringColor) return planetColor;
@@ -335,14 +339,17 @@ export function ParticlePlanet({
   });
 
   // Создаем объекты Points для рендеринга
+  // ВАЖНО: пересоздаем объекты при смене планеты
   const planetPoints = useMemo(() => {
+    console.log('✨ ParticlePlanet: Creating new Points object for planet:', planet.type);
     return new THREE.Points(planetGeometry, planetMaterial);
-  }, [planetGeometry, planetMaterial]);
+  }, [planet.type, planetGeometry, planetMaterial]);
 
   const ringPoints = useMemo(() => {
     if (!ringGeometry || !ringMaterial) return null;
+    console.log('✨ ParticlePlanet: Creating new ring Points object for planet:', planet.type);
     return new THREE.Points(ringGeometry, ringMaterial);
-  }, [ringGeometry, ringMaterial]);
+  }, [planet.type, ringGeometry, ringMaterial]);
 
   return (
     <group>
