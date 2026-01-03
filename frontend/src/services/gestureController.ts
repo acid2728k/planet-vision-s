@@ -1,6 +1,6 @@
 import { NormalizedLandmarkList } from '@mediapipe/hands';
 import { HandOrientation, PinchData, PlanetControlState, SwipeDirection, FingerExtension } from '../types';
-import { landmarkToPoint, Point3D, distance2D } from '../utils/mathUtils';
+import { landmarkToPoint, Point3D } from '../utils/mathUtils';
 
 const LANDMARKS = {
   INDEX_TIP: 8,
