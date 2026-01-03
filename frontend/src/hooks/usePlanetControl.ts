@@ -80,12 +80,17 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       const newRotationY = prev.rotationY + output.rotationY;
       const newRotationZ = prev.rotationZ + output.rotationZ;
       
+      // ВАЖНО: Сохраняем текущую планету из предыдущего состояния
+      // Это гарантирует, что если планета была изменена в предыдущем кадре,
+      // мы не перезапишем это изменение
+      let currentPlanet = prev.currentPlanet;
+      
       const newState: PlanetControlState = {
         zoom: output.zoom,
         rotationX: newRotationX,
         rotationY: newRotationY,
         rotationZ: newRotationZ,
-        currentPlanet: prev.currentPlanet, // Начинаем с предыдущей планеты
+        currentPlanet: currentPlanet, // Начинаем с предыдущей планеты
       };
       
       console.log('🔄 usePlanetControl setState called:', {
@@ -131,11 +136,13 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           });
           
           if (output.swipe.direction === 'right') {
-            const nextPlanet = getNextPlanet(prev.currentPlanet);
+            const nextPlanet = getNextPlanet(currentPlanet);
+            currentPlanet = nextPlanet;
             newState.currentPlanet = nextPlanet;
             console.log('→ Next planet:', nextPlanet, 'from', prev.currentPlanet);
           } else if (output.swipe.direction === 'left') {
-            const prevPlanet = getPreviousPlanet(prev.currentPlanet);
+            const prevPlanet = getPreviousPlanet(currentPlanet);
+            currentPlanet = prevPlanet;
             newState.currentPlanet = prevPlanet;
             console.log('← Previous planet:', prevPlanet, 'from', prev.currentPlanet);
           }
