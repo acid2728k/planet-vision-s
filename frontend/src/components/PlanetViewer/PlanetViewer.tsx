@@ -12,34 +12,16 @@ interface PlanetViewerProps {
 }
 
 export function PlanetViewer({ controlState, onPlanetChange }: PlanetViewerProps) {
-  const [currentPlanetData, setCurrentPlanetData] = useState<PlanetData>(
-    PLANETS[controlState.currentPlanet]
-  );
-  const previousPlanetRef = useRef<PlanetData>(currentPlanetData);
+  // Упрощаем: используем напрямую из controlState, без локального состояния
+  const currentPlanetData = PLANETS[controlState.currentPlanet];
   const canvasRef = useRef<HTMLDivElement>(null);
   const [planetNameSize, setPlanetNameSize] = useState(24); // Размер текста в пикселях
 
-  // Обновляем текущую планету при изменении
+  // Логируем каждое изменение планеты
   useEffect(() => {
-    const newPlanet = PLANETS[controlState.currentPlanet];
-    console.log('🔍 PlanetViewer useEffect triggered:', {
-      currentPlanetInState: controlState.currentPlanet,
-      newPlanetType: newPlanet.type,
-      previousPlanetType: previousPlanetRef.current.type,
-      willChange: newPlanet.type !== previousPlanetRef.current.type,
-    });
-    
-    if (newPlanet.type !== previousPlanetRef.current.type) {
-      console.log('🪐 Planet changed in PlanetViewer:', {
-        from: previousPlanetRef.current.name,
-        to: newPlanet.name,
-        type: newPlanet.type,
-      });
-      setCurrentPlanetData(newPlanet);
-      previousPlanetRef.current = newPlanet;
-      onPlanetChange?.(newPlanet);
-    }
-  }, [controlState.currentPlanet, onPlanetChange]);
+    console.log('🪐 PlanetViewer: Current planet is', controlState.currentPlanet, currentPlanetData.name);
+    onPlanetChange?.(currentPlanetData);
+  }, [controlState.currentPlanet]);
 
   // Вычисляем размер текста как 2% от размера планеты
   useEffect(() => {

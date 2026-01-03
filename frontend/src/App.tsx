@@ -98,7 +98,10 @@ function App() {
         <>
           {/* Planet Vision S - только Planet Mode */}
           <div className={styles.planetMode}>
-            <PlanetViewer controlState={controlState} />
+            <PlanetViewer 
+              key={controlState.currentPlanet} 
+              controlState={controlState} 
+            />
           </div>
         </>
       )}
