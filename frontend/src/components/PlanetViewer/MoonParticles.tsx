@@ -60,54 +60,70 @@ function generateParticlesFromModel(
   const maxDimension = Math.max(size.x, size.y, size.z);
   const scale = (targetRadius * 2) / maxDimension;
 
-  // Генерируем частицы на поверхности мешей
-  const raycaster = new THREE.Raycaster();
-  const direction = new THREE.Vector3();
-  const point = new THREE.Vector3();
-  const normal = new THREE.Vector3();
-
-  let generated = 0;
-  let attempts = 0;
-  const maxAttempts = particleCount * 10; // Ограничиваем попытки
-
-  while (generated < particleCount && attempts < maxAttempts) {
-    attempts++;
-
-    // Выбираем случайный меш
-    const mesh = meshes[Math.floor(Math.random() * meshes.length)];
+  // Собираем все вершины из всех мешей
+  const allVertices: THREE.Vector3[] = [];
+  
+  meshes.forEach((mesh) => {
     const geometry = mesh.geometry;
+    if (!geometry.attributes.position) return;
 
-    if (!geometry.attributes.position) continue;
-
-    // Выбираем случайную вершину из геометрии
     const positionAttribute = geometry.attributes.position;
-    const vertexIndex = Math.floor(Math.random() * positionAttribute.count);
     
-    // Получаем позицию вершины в локальных координатах меша
-    const vertex = new THREE.Vector3(
-      positionAttribute.getX(vertexIndex),
-      positionAttribute.getY(vertexIndex),
-      positionAttribute.getZ(vertexIndex)
-    );
+    // Применяем матрицу меша для получения мировых координат
+    const matrix = mesh.matrixWorld.clone();
+    
+    for (let i = 0; i < positionAttribute.count; i++) {
+      const vertex = new THREE.Vector3(
+        positionAttribute.getX(i),
+        positionAttribute.getY(i),
+        positionAttribute.getZ(i)
+      );
+      
+      // Преобразуем в мировые координаты
+      vertex.applyMatrix4(matrix);
+      
+      // Масштабируем до нужного размера
+      vertex.multiplyScalar(scale);
+      
+      allVertices.push(vertex);
+    }
+  });
 
-    // Преобразуем в мировые координаты
-    vertex.applyMatrix4(mesh.matrixWorld);
+  console.log(`📊 MoonParticles: Found ${allVertices.length} vertices from model`);
 
-    // Масштабируем до нужного размера
-    vertex.multiplyScalar(scale);
+  // Если вершин недостаточно, используем интерполяцию
+  if (allVertices.length === 0) {
+    console.warn('No vertices found in model');
+    // Fallback
+    for (let i = 0; i < particleCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = targetRadius;
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+      sizes[i] = 0.015 + Math.random() * 0.025;
+    }
+    return { positions, sizes };
+  }
 
+  // Генерируем частицы, выбирая вершины из модели
+  // Если вершин больше, чем нужно частиц, выбираем случайные
+  // Если вершин меньше, повторяем выбор с вариацией
+  for (let i = 0; i < particleCount; i++) {
+    const vertexIndex = i % allVertices.length;
+    const baseVertex = allVertices[vertexIndex].clone();
+    
     // Добавляем небольшую вариацию для более естественного вида
-    const variation = 0.02;
-    vertex.x += (Math.random() - 0.5) * variation;
-    vertex.y += (Math.random() - 0.5) * variation;
-    vertex.z += (Math.random() - 0.5) * variation;
+    const variation = 0.01;
+    baseVertex.x += (Math.random() - 0.5) * variation;
+    baseVertex.y += (Math.random() - 0.5) * variation;
+    baseVertex.z += (Math.random() - 0.5) * variation;
 
-    positions[generated * 3] = vertex.x;
-    positions[generated * 3 + 1] = vertex.y;
-    positions[generated * 3 + 2] = vertex.z;
-    sizes[generated] = 0.015 + Math.random() * 0.025;
-
-    generated++;
+    positions[i * 3] = baseVertex.x;
+    positions[i * 3 + 1] = baseVertex.y;
+    positions[i * 3 + 2] = baseVertex.z;
+    sizes[i] = 0.015 + Math.random() * 0.025;
   }
 
   // Если не удалось сгенерировать достаточно частиц, заполняем оставшиеся случайными точками
