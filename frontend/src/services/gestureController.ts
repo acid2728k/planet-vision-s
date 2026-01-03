@@ -293,8 +293,13 @@ export function processGestureControl(
   const indexTip = landmarkToPoint(input.landmarks[LANDMARKS.INDEX_TIP]);
   const wrist = landmarkToPoint(input.landmarks[LANDMARKS.WRIST]);
 
-  // Zoom через раскрытие/схлопывание ладони
-  const zoom = calculateZoom(input.fingerExtension, currentState.zoom);
+  // Zoom через раскрытие/схлопывание ладони + приближение зажатой кисти
+  const zoom = calculateZoom(
+    input.fingerExtension, 
+    currentState.zoom,
+    wrist,
+    input.previousWrist
+  );
 
   // Вращение указательным пальцем (точное, медленное)
   const fingerRotation = calculateFingerRotation(indexTip, input.previousIndexTip);
