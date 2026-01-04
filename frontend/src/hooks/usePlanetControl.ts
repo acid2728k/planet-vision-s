@@ -279,8 +279,17 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         lastSwipeDirectionRef.current = 'none';
       }
       
-      // Обновляем currentPlanet в newState
-      newState.currentPlanet = currentPlanet;
+      // ВАЖНО: Обновляем currentPlanet в newState только если он был изменен
+      // Если планета была переключена (planetSwitched = true), используем новое значение
+      // Если нет - сохраняем предыдущее значение из prev
+      if (planetSwitched) {
+        newState.currentPlanet = currentPlanet;
+        console.log('🔄 Planet was switched, updating newState.currentPlanet to:', currentPlanet);
+      } else {
+        // Если планета не была переключена, сохраняем предыдущее значение
+        // Это важно для предотвращения перезаписи изменений из предыдущих кадров
+        newState.currentPlanet = prev.currentPlanet;
+      }
 
       // Сохраняем текущие значения для следующего кадра
       previousIndexTipRef.current = indexTip;
@@ -294,6 +303,8 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
 
       console.log('✅ Returning state from setControlState:', {
         planet: newState.currentPlanet,
+        prevPlanet: prev.currentPlanet,
+        planetSwitched,
         zoom: newState.zoom,
         rotationX: newState.rotationX,
       });
