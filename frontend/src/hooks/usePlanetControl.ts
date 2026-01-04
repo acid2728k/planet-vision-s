@@ -26,11 +26,6 @@ const INITIAL_STATE: PlanetControlState = {
 export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps) {
   const [controlState, setControlState] = useState<PlanetControlState>(INITIAL_STATE);
   
-  // Инициализируем lastPlanetRef начальным значением
-  if (lastPlanetRef.current === 'SATURN' && controlState.currentPlanet !== 'SATURN') {
-    lastPlanetRef.current = controlState.currentPlanet;
-  }
-  
   // Логируем изменения currentPlanet
   useEffect(() => {
     console.log('📡 usePlanetControl: controlState.currentPlanet =', controlState.currentPlanet);
@@ -47,7 +42,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const lastVerticalMovementTimeRef = useRef<number>(0);
   const previousPinchStrengthRef = useRef<number>(0);
   const lastPinchSwitchTimeRef = useRef<number>(0);
-  const lastPlanetRef = useRef<PlanetType>('SATURN'); // Отслеживаем последнюю установленную планету
+  const lastPlanetRef = useRef<PlanetType>(controlState.currentPlanet); // Отслеживаем последнюю установленную планету
   const SWIPE_COOLDOWN = 150; // Минимальное время между swipe (мс) - уменьшено для максимальной отзывчивости
   const PINCH_COOLDOWN = 300; // Минимальное время между pinch переключениями
   const PINCH_SWITCH_COOLDOWN = 500; // Минимальное время между переключениями по простому pinch
