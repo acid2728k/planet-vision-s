@@ -111,7 +111,9 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       const now = Date.now();
       let planetSwitched = false;
       
-      // ЖЕСТ 0: Простое соединение указательного и большого пальца (PINCH)
+      // ЖЕСТ 0: Соединение указательного и большого пальца (PINCH) = кнопки слайдера
+      // Pinch + движение вправо = кнопка "вперед" (следующая планета)
+      // Pinch + движение влево = кнопка "назад" (предыдущая планета)
       const pinchStrength = handData.pinch.strength;
       const previousPinchStrength = previousPinchStrengthRef.current;
       const isPinching = pinchStrength > PINCH_THRESHOLD;
@@ -124,25 +126,39 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           lastPinchSwitchTimeRef.current = now;
           
           // Определяем направление по движению руки в момент pinch
+          // Это работает как кнопки слайдера: вправо = вперед, влево = назад
           let switchDirection: 'next' | 'previous' = 'next';
           if (previousWristRef.current) {
             const deltaX = wrist.x - previousWristRef.current.x;
-            // Если рука движется влево в момент pinch - предыдущая планета, иначе следующая
-            switchDirection = deltaX < -0.01 ? 'previous' : 'next';
+            const SWIPE_DIRECTION_THRESHOLD = 0.01;
+            
+            // Движение вправо = кнопка "вперед" (следующая планета)
+            // Движение влево = кнопка "назад" (предыдущая планета)
+            if (deltaX > SWIPE_DIRECTION_THRESHOLD) {
+              switchDirection = 'next'; // Кнопка "вперед"
+            } else if (deltaX < -SWIPE_DIRECTION_THRESHOLD) {
+              switchDirection = 'previous'; // Кнопка "назад"
+            } else {
+              // Если нет движения, по умолчанию следующая планета (кнопка "вперед")
+              switchDirection = 'next';
+            }
           }
           
-          console.log('✅ Planet switch (SIMPLE PINCH):', {
+          console.log('✅ Planet switch (PINCH = кнопка слайдера):', {
             pinchStrength,
             switchDirection,
             from: currentPlanet,
+            button: switchDirection === 'next' ? 'вперед →' : 'назад ←',
           });
           
           if (switchDirection === 'next') {
+            // Кнопка "вперед" слайдера
             currentPlanet = getNextPlanet(currentPlanet);
-            console.log('👆 Next planet:', currentPlanet, 'from', prev.currentPlanet);
+            console.log('👆 Кнопка "вперед" → Next planet:', currentPlanet, 'from', prev.currentPlanet);
           } else {
+            // Кнопка "назад" слайдера
             currentPlanet = getPreviousPlanet(currentPlanet);
-            console.log('👈 Previous planet:', currentPlanet, 'from', prev.currentPlanet);
+            console.log('👈 Кнопка "назад" ← Previous planet:', currentPlanet, 'from', prev.currentPlanet);
           }
           planetSwitched = true;
         }
