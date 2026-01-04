@@ -42,6 +42,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
   const lastVerticalMovementTimeRef = useRef<number>(0);
   const previousPinchStrengthRef = useRef<number>(0);
   const lastPinchSwitchTimeRef = useRef<number>(0);
+  const lastPlanetRef = useRef<PlanetType>('SATURN'); // Отслеживаем последнюю установленную планету
   const SWIPE_COOLDOWN = 150; // Минимальное время между swipe (мс) - уменьшено для максимальной отзывчивости
   const PINCH_COOLDOWN = 300; // Минимальное время между pinch переключениями
   const PINCH_SWITCH_COOLDOWN = 500; // Минимальное время между переключениями по простому pinch
