@@ -88,9 +88,8 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       const newRotationY = prev.rotationY + output.rotationY;
       const newRotationZ = prev.rotationZ + output.rotationZ;
       
-      // ВАЖНО: Сохраняем текущую планету из предыдущего состояния
-      // Это гарантирует, что если планета была изменена в предыдущем кадре,
-      // мы не перезапишем это изменение
+      // ВАЖНО: Всегда начинаем с планеты из предыдущего состояния
+      // Это гарантирует, что изменения сохраняются между кадрами
       let currentPlanet = prev.currentPlanet;
       
       const newState: PlanetControlState = {
@@ -98,7 +97,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         rotationX: newRotationX,
         rotationY: newRotationY,
         rotationZ: newRotationZ,
-        currentPlanet: currentPlanet, // Начинаем с предыдущей планеты
+        currentPlanet: prev.currentPlanet, // ВСЕГДА начинаем с предыдущей планеты
       };
       
       console.log('🔄 usePlanetControl setState called:', {
@@ -279,16 +278,17 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         lastSwipeDirectionRef.current = 'none';
       }
       
-      // ВАЖНО: Обновляем currentPlanet в newState только если он был изменен
-      // Если планета была переключена (planetSwitched = true), используем новое значение
-      // Если нет - сохраняем предыдущее значение из prev
+      // ВАЖНО: ВСЕГДА используем currentPlanet (который может быть изменен жестами)
+      // Если планета была переключена, currentPlanet содержит новое значение
+      // Если нет - currentPlanet = prev.currentPlanet (не изменился)
+      newState.currentPlanet = currentPlanet;
+      
       if (planetSwitched) {
-        newState.currentPlanet = currentPlanet;
-        console.log('🔄 Planet was switched, updating newState.currentPlanet to:', currentPlanet);
-      } else {
-        // Если планета не была переключена, сохраняем предыдущее значение
-        // Это важно для предотвращения перезаписи изменений из предыдущих кадров
-        newState.currentPlanet = prev.currentPlanet;
+        console.log('🔄 Planet was switched:', {
+          from: prev.currentPlanet,
+          to: currentPlanet,
+          newStatePlanet: newState.currentPlanet,
+        });
       }
 
       // Сохраняем текущие значения для следующего кадра
