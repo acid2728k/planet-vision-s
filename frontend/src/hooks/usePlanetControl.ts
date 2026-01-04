@@ -169,11 +169,9 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           
           if (output.swipe.direction === 'right') {
             currentPlanet = getNextPlanet(currentPlanet);
-            newState.currentPlanet = currentPlanet;
             console.log('→ Next planet:', currentPlanet);
           } else if (output.swipe.direction === 'left') {
             currentPlanet = getPreviousPlanet(currentPlanet);
-            newState.currentPlanet = currentPlanet;
             console.log('← Previous planet:', currentPlanet);
           }
           planetSwitched = true;
@@ -257,11 +255,9 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           
           if (output.swipe.direction === 'right') {
             currentPlanet = getNextPlanet(currentPlanet);
-            newState.currentPlanet = currentPlanet;
             console.log('→ Next planet:', currentPlanet);
           } else if (output.swipe.direction === 'left') {
             currentPlanet = getPreviousPlanet(currentPlanet);
-            newState.currentPlanet = currentPlanet;
             console.log('← Previous planet:', currentPlanet);
           }
           planetSwitched = true;
