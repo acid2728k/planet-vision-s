@@ -133,6 +133,21 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       // ЖЕСТ: Двойное зажатие для переключения планет
       // Два раза зажать указательный и большой = вперед
       // Два раза зажать средний и большой = назад
+      // ВАЖНО: НЕ реагируем на кулак (зажатие всех пальцев)
+      
+      // ПРОВЕРКА 1: Убеждаемся, что это НЕ кулак (CLOSED gesture)
+      // Кулак = все пальцы согнуты (fingerExtension < 0.3 для всех)
+      const avgFingerExtension = (
+        handData.fingerExtension.index +
+        handData.fingerExtension.middle +
+        handData.fingerExtension.ring +
+        handData.fingerExtension.pinky
+      ) / 4;
+      const isFist = avgFingerExtension < 0.3; // Если среднее раскрытие < 0.3, это кулак
+      
+      // ПРОВЕРКА 2: Убеждаемся, что только один палец зажат (не все)
+      // Если ring и pinky тоже согнуты сильно, это кулак
+      const otherFingersClosed = handData.fingerExtension.ring < 0.3 && handData.fingerExtension.pinky < 0.3;
       
       // Определяем, какой палец зажат с большим
       const mainHandLandmarks = landmarks[0];
@@ -153,19 +168,46 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       );
       
       // Определяем, какой палец ближе к большому (зажат)
-      const PINCH_DISTANCE_THRESHOLD = 0.05; // Порог для определения зажатия
+      const PINCH_DISTANCE_THRESHOLD = 0.04; // Порог для определения зажатия (уменьшен для точности)
       const isIndexPinched = thumbIndexDistance < PINCH_DISTANCE_THRESHOLD;
       const isMiddlePinched = thumbMiddleDistance < PINCH_DISTANCE_THRESHOLD;
       
       // Определяем текущий зажатый палец
+      // ВАЖНО: Игнорируем, если это кулак (все пальцы согнуты)
       let currentPinchFinger: 'index' | 'middle' | null = null;
-      if (isIndexPinched && !isMiddlePinched) {
-        currentPinchFinger = 'index';
-      } else if (isMiddlePinched && !isIndexPinched) {
-        currentPinchFinger = 'middle';
-      } else if (isIndexPinched && isMiddlePinched) {
-        // Если оба зажаты, выбираем ближайший
-        currentPinchFinger = thumbIndexDistance < thumbMiddleDistance ? 'index' : 'middle';
+      
+      if (!isFist && !otherFingersClosed) {
+        // Это НЕ кулак - можно определять зажатие
+        if (isIndexPinched && !isMiddlePinched) {
+          // Только указательный зажат
+          // Дополнительная проверка: указательный должен быть согнут, но не слишком сильно
+          if (handData.fingerExtension.index < 0.5 && handData.fingerExtension.index > 0.1) {
+            currentPinchFinger = 'index';
+          }
+        } else if (isMiddlePinched && !isIndexPinched) {
+          // Только средний зажат
+          // Дополнительная проверка: средний должен быть согнут, но не слишком сильно
+          if (handData.fingerExtension.middle < 0.5 && handData.fingerExtension.middle > 0.1) {
+            currentPinchFinger = 'middle';
+          }
+        } else if (isIndexPinched && isMiddlePinched) {
+          // Оба зажаты - это может быть кулак, игнорируем
+          currentPinchFinger = null;
+        }
+      } else {
+        // Это кулак - игнорируем
+        currentPinchFinger = null;
+        if (isIndexPinched || isMiddlePinched) {
+          console.log('🚫 Кулак обнаружен - игнорируем pinch:', {
+            isFist,
+            otherFingersClosed,
+            avgFingerExtension: avgFingerExtension.toFixed(3),
+            indexExtension: handData.fingerExtension.index.toFixed(3),
+            middleExtension: handData.fingerExtension.middle.toFixed(3),
+            ringExtension: handData.fingerExtension.ring.toFixed(3),
+            pinkyExtension: handData.fingerExtension.pinky.toFixed(3),
+          });
+        }
       }
       
       const previousPinchFinger = previousPinchFingerRef.current;
@@ -175,7 +217,7 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       // Определяем момент начала pinch (переход от не-зажато к зажато)
       const pinchJustStarted = isPinching && !wasPinching;
       
-      // ДИАГНОСТИКА
+      // ДИАГНОСТИКА: Логируем состояние для отладки
       if (pinchJustStarted || (isPinching && currentPinchFinger !== previousPinchFinger)) {
         console.log('🔍 PINCH диагностика:', {
           currentPinchFinger,
@@ -183,8 +225,15 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           isPinching,
           wasPinching,
           pinchJustStarted,
+          isFist,
+          otherFingersClosed,
           thumbIndexDistance: thumbIndexDistance.toFixed(3),
           thumbMiddleDistance: thumbMiddleDistance.toFixed(3),
+          indexExtension: handData.fingerExtension.index.toFixed(3),
+          middleExtension: handData.fingerExtension.middle.toFixed(3),
+          ringExtension: handData.fingerExtension.ring.toFixed(3),
+          pinkyExtension: handData.fingerExtension.pinky.toFixed(3),
+          avgExtension: avgFingerExtension.toFixed(3),
         });
       }
       
