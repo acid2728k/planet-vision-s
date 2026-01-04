@@ -215,10 +215,13 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       previousPinchStrengthRef.current = pinchStrength;
       
       // ЖЕСТ 1: Pinch (схлопывание большого и указательного пальцев) + движение влево/вправо
+      // ОТКЛЮЧЕН: Используем только ЖЕСТ 0 (простой pinch)
+      // Раскомментируйте, если нужен этот жест
+      /*
       const hasSwipe = output.swipe.direction !== 'none';
       const hasVelocity = output.swipe.velocity > 0.005;
       
-      if (isPinching && hasSwipe && hasVelocity) {
+      if (isPinching && hasSwipe && hasVelocity && !planetSwitched) {
         const timeSinceLastPinch = now - lastPinchTimeRef.current;
         if (timeSinceLastPinch > PINCH_COOLDOWN) {
           lastPinchTimeRef.current = now;
@@ -240,8 +243,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           planetSwitched = true;
         }
       }
+      */
       
       // ЖЕСТ 2: Движение руки вверх/вниз (вертикальное движение)
+      // ОТКЛЮЧЕН: Используем только ЖЕСТ 0 (простой pinch)
+      // Раскомментируйте, если нужен этот жест
+      /*
       if (!planetSwitched && previousWristRef.current) {
         const deltaY = wrist.y - previousWristRef.current.y;
         const absDeltaY = Math.abs(deltaY);
@@ -271,8 +278,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           }
         }
       }
+      */
       
       // ЖЕСТ 3: Вращение кисти (roll) - резкое изменение roll
+      // ОТКЛЮЧЕН: Используем только ЖЕСТ 0 (простой pinch)
+      // Раскомментируйте, если нужен этот жест
+      /*
       if (!planetSwitched && previousOrientationRef.current) {
         const deltaRoll = Math.abs(handData.orientation.roll - previousOrientationRef.current.roll);
         const ROLL_THRESHOLD = 30; // Порог для резкого вращения (градусы)
@@ -300,8 +311,15 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           }
         }
       }
+      */
       
       // ЖЕСТ 4: Обычный свайп (резервный вариант)
+      // ОТКЛЮЧЕН: Используем только ЖЕСТ 0 (простой pinch)
+      // Раскомментируйте, если нужен этот жест
+      /*
+      const hasSwipe = output.swipe.direction !== 'none';
+      const hasVelocity = output.swipe.velocity > 0.005;
+      
       if (!planetSwitched && hasSwipe && hasVelocity) {
         const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
         const isNewSwipe = output.swipe.direction !== lastSwipeDirectionRef.current;
@@ -326,7 +344,10 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           planetSwitched = true;
         }
       }
+      */
       
+      // Сбрасываем направление свайпа (для будущего использования)
+      const hasSwipe = output.swipe.direction !== 'none';
       if (!hasSwipe) {
         lastSwipeDirectionRef.current = 'none';
       }
