@@ -26,6 +26,11 @@ const INITIAL_STATE: PlanetControlState = {
 export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps) {
   const [controlState, setControlState] = useState<PlanetControlState>(INITIAL_STATE);
   
+  // Инициализируем lastPlanetRef начальным значением
+  if (lastPlanetRef.current === 'SATURN' && controlState.currentPlanet !== 'SATURN') {
+    lastPlanetRef.current = controlState.currentPlanet;
+  }
+  
   // Логируем изменения currentPlanet
   useEffect(() => {
     console.log('📡 usePlanetControl: controlState.currentPlanet =', controlState.currentPlanet);
