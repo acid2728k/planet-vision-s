@@ -123,14 +123,33 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       let planetSwitched = false;
       
       // ЖЕСТ 0: Соединение указательного и большого пальца (PINCH) = кнопки слайдера
-      // Pinch + движение вправо = кнопка "вперед" (следующая планета)
-      // Pinch + движение влево = кнопка "назад" (предыдущая планета)
+      // ВАЖНО: Реагируем ТОЛЬКО на момент начала pinch (единовременное зажатие)
+      // НЕ реагируем на постоянно закрытую ладонь
       const pinchStrength = handData.pinch.strength;
       const previousPinchStrength = previousPinchStrengthRef.current;
       const isPinching = pinchStrength > PINCH_THRESHOLD;
       const wasPinching = previousPinchStrength > PINCH_THRESHOLD;
-      const pinchJustStarted = isPinching && !wasPinching; // Переход от не-pinch к pinch
       
+      // ДИАГНОСТИКА: Логируем состояние pinch для отладки
+      const pinchDelta = pinchStrength - previousPinchStrength;
+      const PINCH_START_THRESHOLD = 0.3; // Минимальное увеличение силы для определения начала pinch
+      const pinchJustStarted = isPinching && !wasPinching && pinchDelta > PINCH_START_THRESHOLD;
+      
+      // ДИАГНОСТИКА: Логируем только при значительных изменениях
+      if (Math.abs(pinchDelta) > 0.1) {
+        console.log('🔍 PINCH диагностика:', {
+          pinchStrength: pinchStrength.toFixed(3),
+          previousPinchStrength: previousPinchStrength.toFixed(3),
+          pinchDelta: pinchDelta.toFixed(3),
+          isPinching,
+          wasPinching,
+          pinchJustStarted,
+          threshold: PINCH_THRESHOLD,
+          startThreshold: PINCH_START_THRESHOLD,
+        });
+      }
+      
+      // Переключаем планету ТОЛЬКО при единовременном начале pinch
       if (pinchJustStarted && !planetSwitched) {
         const timeSinceLastPinchSwitch = now - lastPinchSwitchTimeRef.current;
         if (timeSinceLastPinchSwitch > PINCH_SWITCH_COOLDOWN) {
@@ -156,10 +175,12 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           }
           
           console.log('✅ Planet switch (PINCH = кнопка слайдера):', {
-            pinchStrength,
+            pinchStrength: pinchStrength.toFixed(3),
+            pinchDelta: pinchDelta.toFixed(3),
             switchDirection,
             from: currentPlanet,
             button: switchDirection === 'next' ? 'вперед →' : 'назад ←',
+            timeSinceLastSwitch: timeSinceLastPinchSwitch,
           });
           
           if (switchDirection === 'next') {
@@ -172,6 +193,21 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
             console.log('👈 Кнопка "назад" ← Previous planet:', currentPlanet, 'from', prev.currentPlanet);
           }
           planetSwitched = true;
+        } else {
+          console.log('⏱️ PINCH игнорирован (кулдаун):', {
+            timeSinceLastSwitch: timeSinceLastPinchSwitch,
+            cooldown: PINCH_SWITCH_COOLDOWN,
+            remaining: PINCH_SWITCH_COOLDOWN - timeSinceLastPinchSwitch,
+          });
+        }
+      } else if (isPinching && wasPinching) {
+        // ДИАГНОСТИКА: Pinch продолжается, но не переключаем (это нормально)
+        if (Math.abs(pinchDelta) > 0.1) {
+          console.log('🔒 PINCH продолжается (не переключаем):', {
+            pinchStrength: pinchStrength.toFixed(3),
+            wasPinching: true,
+            reason: 'Pinch уже был активен, ждем нового начала',
+          });
         }
       }
       
