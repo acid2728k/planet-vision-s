@@ -88,16 +88,26 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       const newRotationY = prev.rotationY + output.rotationY;
       const newRotationZ = prev.rotationZ + output.rotationZ;
       
-      // ВАЖНО: Всегда начинаем с планеты из предыдущего состояния
-      // Это гарантирует, что изменения сохраняются между кадрами
+      // ВАЖНО: Используем lastPlanetRef для отслеживания последней установленной планеты
+      // Это решает проблему батчинга React, когда prev.currentPlanet может быть устаревшим
+      // Если prev.currentPlanet отличается от lastPlanetRef, используем lastPlanetRef (более актуальное значение)
       let currentPlanet = prev.currentPlanet;
+      if (prev.currentPlanet !== lastPlanetRef.current) {
+        // Если есть расхождение, используем значение из ref (более актуальное)
+        currentPlanet = lastPlanetRef.current;
+        console.log('⚠️ Planet mismatch detected, using ref value:', {
+          prevPlanet: prev.currentPlanet,
+          refPlanet: lastPlanetRef.current,
+          using: currentPlanet,
+        });
+      }
       
       const newState: PlanetControlState = {
         zoom: output.zoom,
         rotationX: newRotationX,
         rotationY: newRotationY,
         rotationZ: newRotationZ,
-        currentPlanet: prev.currentPlanet, // ВСЕГДА начинаем с предыдущей планеты
+        currentPlanet: currentPlanet, // Используем актуальное значение
       };
       
       console.log('🔄 usePlanetControl setState called:', {
@@ -289,12 +299,18 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
       // Если нет - currentPlanet = prev.currentPlanet (не изменился)
       newState.currentPlanet = currentPlanet;
       
+      // Обновляем ref с новым значением планеты
       if (planetSwitched) {
+        lastPlanetRef.current = currentPlanet;
         console.log('🔄 Planet was switched:', {
           from: prev.currentPlanet,
           to: currentPlanet,
           newStatePlanet: newState.currentPlanet,
+          refUpdated: lastPlanetRef.current,
         });
+      } else {
+        // Даже если планета не переключена, обновляем ref для синхронизации
+        lastPlanetRef.current = currentPlanet;
       }
 
       // Сохраняем текущие значения для следующего кадра
