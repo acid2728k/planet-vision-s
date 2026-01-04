@@ -158,40 +158,37 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         // Пропускаем всю логику переключения планет
       } else {
         // Это НЕ кулак - продолжаем логику переключения планет
-      
-      // ЖЕСТ: Двойное зажатие для переключения планет
-      // Два раза зажать указательный и большой = вперед
-      // Два раза зажать средний и большой = назад
-      
-      // Определяем, какой палец зажат с большим
-      const mainHandLandmarks = landmarks[0];
-      const thumbTip = landmarkToPoint(mainHandLandmarks[LANDMARKS.THUMB_TIP]);
-      const indexTip = landmarkToPoint(mainHandLandmarks[LANDMARKS.INDEX_TIP]);
-      const middleTip = landmarkToPoint(mainHandLandmarks[LANDMARKS.MIDDLE_TIP]);
-      
-      // Вычисляем расстояния от большого пальца до указательного и среднего
-      const thumbIndexDistance = Math.sqrt(
-        Math.pow(thumbTip.x - indexTip.x, 2) + 
-        Math.pow(thumbTip.y - indexTip.y, 2) + 
-        Math.pow(thumbTip.z - indexTip.z, 2)
-      );
-      const thumbMiddleDistance = Math.sqrt(
-        Math.pow(thumbTip.x - middleTip.x, 2) + 
-        Math.pow(thumbTip.y - middleTip.y, 2) + 
-        Math.pow(thumbTip.z - middleTip.z, 2)
-      );
-      
-      // Определяем, какой палец ближе к большому (зажат)
-      const PINCH_DISTANCE_THRESHOLD = 0.05; // Порог для определения зажатия
-      const isIndexPinched = thumbIndexDistance < PINCH_DISTANCE_THRESHOLD;
-      const isMiddlePinched = thumbMiddleDistance < PINCH_DISTANCE_THRESHOLD;
-      
-      // Определяем текущий зажатый палец
-      // ВАЖНО: Игнорируем ТОЛЬКО если это кулак (все пальцы сильно согнуты)
-      let currentPinchFinger: 'index' | 'middle' | null = null;
-      
-      if (!isFist) {
-        // Это НЕ кулак - определяем зажатие
+        
+        // ЖЕСТ: Двойное зажатие для переключения планет
+        // Два раза зажать указательный и большой = вперед
+        // Два раза зажать средний и большой = назад
+        
+        // Определяем, какой палец зажат с большим
+        const mainHandLandmarks = landmarks[0];
+        const thumbTip = landmarkToPoint(mainHandLandmarks[LANDMARKS.THUMB_TIP]);
+        const indexTip = landmarkToPoint(mainHandLandmarks[LANDMARKS.INDEX_TIP]);
+        const middleTip = landmarkToPoint(mainHandLandmarks[LANDMARKS.MIDDLE_TIP]);
+        
+        // Вычисляем расстояния от большого пальца до указательного и среднего
+        const thumbIndexDistance = Math.sqrt(
+          Math.pow(thumbTip.x - indexTip.x, 2) + 
+          Math.pow(thumbTip.y - indexTip.y, 2) + 
+          Math.pow(thumbTip.z - indexTip.z, 2)
+        );
+        const thumbMiddleDistance = Math.sqrt(
+          Math.pow(thumbTip.x - middleTip.x, 2) + 
+          Math.pow(thumbTip.y - middleTip.y, 2) + 
+          Math.pow(thumbTip.z - middleTip.z, 2)
+        );
+        
+        // Определяем, какой палец ближе к большому (зажат)
+        const PINCH_DISTANCE_THRESHOLD = 0.05; // Порог для определения зажатия
+        const isIndexPinched = thumbIndexDistance < PINCH_DISTANCE_THRESHOLD;
+        const isMiddlePinched = thumbMiddleDistance < PINCH_DISTANCE_THRESHOLD;
+        
+        // Определяем текущий зажатый палец
+        let currentPinchFinger: 'index' | 'middle' | null = null;
+        
         if (isIndexPinched && !isMiddlePinched) {
           // Только указательный зажат с большим
           currentPinchFinger = 'index';
@@ -199,30 +196,9 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           // Только средний зажат с большим
           currentPinchFinger = 'middle';
         } else if (isIndexPinched && isMiddlePinched) {
-          // Оба зажаты одновременно - это может быть кулак, игнорируем для переключения
-          // Но если это не кулак (ring/pinky не согнуты), выбираем ближайший
-          if (handData.fingerExtension.ring > 0.3 || handData.fingerExtension.pinky > 0.3) {
-            // Другие пальцы не согнуты - это не кулак, выбираем ближайший
-            currentPinchFinger = thumbIndexDistance < thumbMiddleDistance ? 'index' : 'middle';
-          } else {
-            // Это кулак - игнорируем
-            currentPinchFinger = null;
-          }
+          // Оба зажаты одновременно - выбираем ближайший
+          currentPinchFinger = thumbIndexDistance < thumbMiddleDistance ? 'index' : 'middle';
         }
-      } else {
-        // Это кулак - игнорируем для переключения планет
-        // Кулак должен делать зум ин (это обрабатывается в gestureController)
-        currentPinchFinger = null;
-        if (isIndexPinched || isMiddlePinched) {
-          console.log('🚫 Кулак обнаружен - игнорируем pinch для переключения планет (должен делать зум ин):', {
-            isFist,
-            indexExtension: handData.fingerExtension.index.toFixed(3),
-            middleExtension: handData.fingerExtension.middle.toFixed(3),
-            ringExtension: handData.fingerExtension.ring.toFixed(3),
-            pinkyExtension: handData.fingerExtension.pinky.toFixed(3),
-          });
-        }
-      }
       
       const previousPinchFinger = previousPinchFingerRef.current;
       const isPinching = currentPinchFinger !== null;
@@ -249,76 +225,68 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
         });
       }
       
-      // Логика двойного зажатия
-      // ВАЖНО: Работает ТОЛЬКО если это НЕ кулак (currentPinchFinger !== null)
-      if (pinchJustStarted && !planetSwitched && currentPinchFinger !== null && !isFist) {
-        const timeSinceFirstPinch = now - firstPinchTimeRef.current;
-        
-        // Проверяем, это первое или второе зажатие
-        if (firstPinchTimeRef.current === 0 || timeSinceFirstPinch > DOUBLE_PINCH_TIMEOUT) {
-          // Первое зажатие - запоминаем время и палец
-          firstPinchTimeRef.current = now;
-          firstPinchFingerRef.current = currentPinchFinger;
-          console.log('👆 Первое зажатие:', {
-            finger: currentPinchFinger,
-            time: now,
-            isFist: false,
-          });
-        } else {
-          // Второе зажатие - проверяем, тот же палец и в пределах таймаута
-          if (firstPinchFingerRef.current === currentPinchFinger && timeSinceFirstPinch <= DOUBLE_PINCH_TIMEOUT) {
-            // Двойное зажатие обнаружено!
-            console.log('✅ Двойное зажатие обнаружено:', {
-              finger: currentPinchFinger,
-              timeSinceFirstPinch,
-              from: currentPlanet,
-            });
-            
-            // Переключаем планету в зависимости от пальца
-            if (currentPinchFinger === 'index') {
-              // Два раза указательный + большой = вперед
-              currentPlanet = getNextPlanet(currentPlanet);
-              console.log('👆 Двойное зажатие указательного → Next planet:', currentPlanet);
-            } else if (currentPinchFinger === 'middle') {
-              // Два раза средний + большой = назад
-              currentPlanet = getPreviousPlanet(currentPlanet);
-              console.log('👈 Двойное зажатие среднего ← Previous planet:', currentPlanet);
-            }
-            
-            // Сбрасываем счетчик для следующего двойного зажатия
-            firstPinchTimeRef.current = 0;
-            firstPinchFingerRef.current = null;
-            planetSwitched = true;
-          } else {
-            // Другое зажатие или таймаут - начинаем заново
+        // Логика двойного зажатия
+        // ВАЖНО: Работает ТОЛЬКО если это НЕ кулак (мы уже в блоке else, значит !isFist)
+        if (pinchJustStarted && !planetSwitched && currentPinchFinger !== null) {
+          const timeSinceFirstPinch = now - firstPinchTimeRef.current;
+          
+          // Проверяем, это первое или второе зажатие
+          if (firstPinchTimeRef.current === 0 || timeSinceFirstPinch > DOUBLE_PINCH_TIMEOUT) {
+            // Первое зажатие - запоминаем время и палец
             firstPinchTimeRef.current = now;
             firstPinchFingerRef.current = currentPinchFinger;
-            console.log('🔄 Новое первое зажатие (предыдущее сброшено):', {
+            console.log('👆 Первое зажатие:', {
               finger: currentPinchFinger,
-              reason: firstPinchFingerRef.current !== currentPinchFinger ? 'другой палец' : 'таймаут',
+              time: now,
             });
+          } else {
+            // Второе зажатие - проверяем, тот же палец и в пределах таймаута
+            if (firstPinchFingerRef.current === currentPinchFinger && timeSinceFirstPinch <= DOUBLE_PINCH_TIMEOUT) {
+              // Двойное зажатие обнаружено!
+              console.log('✅ Двойное зажатие обнаружено:', {
+                finger: currentPinchFinger,
+                timeSinceFirstPinch,
+                from: currentPlanet,
+              });
+              
+              // Переключаем планету в зависимости от пальца
+              if (currentPinchFinger === 'index') {
+                // Два раза указательный + большой = вперед
+                currentPlanet = getNextPlanet(currentPlanet);
+                console.log('👆 Двойное зажатие указательного → Next planet:', currentPlanet);
+              } else if (currentPinchFinger === 'middle') {
+                // Два раза средний + большой = назад
+                currentPlanet = getPreviousPlanet(currentPlanet);
+                console.log('👈 Двойное зажатие среднего ← Previous planet:', currentPlanet);
+              }
+              
+              // Сбрасываем счетчик для следующего двойного зажатия
+              firstPinchTimeRef.current = 0;
+              firstPinchFingerRef.current = null;
+              planetSwitched = true;
+            } else {
+              // Другое зажатие или таймаут - начинаем заново
+              firstPinchTimeRef.current = now;
+              firstPinchFingerRef.current = currentPinchFinger;
+              console.log('🔄 Новое первое зажатие (предыдущее сброшено):', {
+                finger: currentPinchFinger,
+                reason: firstPinchFingerRef.current !== currentPinchFinger ? 'другой палец' : 'таймаут',
+              });
+            }
+          }
+        } else if (!isPinching && wasPinching) {
+          // Палец отпущен - если прошло много времени, сбрасываем счетчик
+          const timeSinceFirstPinch = now - firstPinchTimeRef.current;
+          if (timeSinceFirstPinch > DOUBLE_PINCH_TIMEOUT) {
+            firstPinchTimeRef.current = 0;
+            firstPinchFingerRef.current = null;
+            console.log('🔓 Палец отпущен, счетчик сброшен');
           }
         }
-      } else if (isFist && (isIndexPinched || isMiddlePinched)) {
-        // Кулак обнаружен - сбрасываем счетчик двойного зажатия
-        // Кулак должен делать зум ин (обрабатывается в gestureController через fingerExtension)
-        if (firstPinchTimeRef.current !== 0) {
-          firstPinchTimeRef.current = 0;
-          firstPinchFingerRef.current = null;
-          console.log('🚫 Кулак обнаружен - сбрасываем счетчик двойного зажатия (должен делать зум ин)');
-        }
-      } else if (!isPinching && wasPinching) {
-        // Палец отпущен - если прошло много времени, сбрасываем счетчик
-        const timeSinceFirstPinch = now - firstPinchTimeRef.current;
-        if (timeSinceFirstPinch > DOUBLE_PINCH_TIMEOUT) {
-          firstPinchTimeRef.current = 0;
-          firstPinchFingerRef.current = null;
-          console.log('🔓 Палец отпущен, счетчик сброшен');
-        }
+        
+        // Сохраняем текущий зажатый палец для следующего кадра
+        previousPinchFingerRef.current = currentPinchFinger;
       }
-      
-      // Сохраняем текущий зажатый палец для следующего кадра
-      previousPinchFingerRef.current = currentPinchFinger;
       
       // ЖЕСТ 1: Pinch (схлопывание большого и указательного пальцев) + движение влево/вправо
       // ОТКЛЮЧЕН: Используем только ЖЕСТ 0 (простой pinch)
