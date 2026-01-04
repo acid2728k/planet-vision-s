@@ -139,12 +139,10 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
           
           if (switchDirection === 'next') {
             currentPlanet = getNextPlanet(currentPlanet);
-            newState.currentPlanet = currentPlanet;
-            console.log('👆 Next planet:', currentPlanet);
+            console.log('👆 Next planet:', currentPlanet, 'from', prev.currentPlanet);
           } else {
             currentPlanet = getPreviousPlanet(currentPlanet);
-            newState.currentPlanet = currentPlanet;
-            console.log('👈 Previous planet:', currentPlanet);
+            console.log('👈 Previous planet:', currentPlanet, 'from', prev.currentPlanet);
           }
           planetSwitched = true;
         }
@@ -202,13 +200,11 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
             if (deltaY > 0) {
               // Движение вверх → следующая планета
               currentPlanet = getNextPlanet(currentPlanet);
-              newState.currentPlanet = currentPlanet;
-              console.log('↑ Next planet:', currentPlanet);
+              console.log('↑ Next planet:', currentPlanet, 'from', prev.currentPlanet);
             } else {
               // Движение вниз → предыдущая планета
               currentPlanet = getPreviousPlanet(currentPlanet);
-              newState.currentPlanet = currentPlanet;
-              console.log('↓ Previous planet:', currentPlanet);
+              console.log('↓ Previous planet:', currentPlanet, 'from', prev.currentPlanet);
             }
             planetSwitched = true;
           }
@@ -234,12 +230,10 @@ export function usePlanetControl({ handData, landmarks }: UsePlanetControlProps)
             // Положительное вращение → следующая планета, отрицательное → предыдущая
             if (handData.orientation.roll > previousOrientationRef.current.roll) {
               currentPlanet = getNextPlanet(currentPlanet);
-              newState.currentPlanet = currentPlanet;
-              console.log('↻ Next planet:', currentPlanet);
+              console.log('↻ Next planet:', currentPlanet, 'from', prev.currentPlanet);
             } else {
               currentPlanet = getPreviousPlanet(currentPlanet);
-              newState.currentPlanet = currentPlanet;
-              console.log('↺ Previous planet:', currentPlanet);
+              console.log('↺ Previous planet:', currentPlanet, 'from', prev.currentPlanet);
             }
             planetSwitched = true;
           }
